@@ -1,0 +1,22 @@
+<launch>
+
+	<!-- Joystick Controller Node -->
+
+	<!-- Arguments (Overrideable) -->
+	<arg name="joy_fd" default="/dev/input/js0"/>
+	<arg name="joy_pub_name" default="/input/joystick"/>
+	<arg name="looping_rate" default= "100"/>
+        <arg name="sleep_time" default= "1000000"/>
+        <arg name="timeout_time" default= "60"/>
+
+        
+
+	<node name ="joystick_node" pkg="coop" type="joystick_node" required="true">
+		<param name="joy_fd" value="$(arg joy_fd)"/>
+		<param name="joy_pub_name" value="$(arg joy_pub_name)"/>
+		<param name="looping_rate" value="$(arg looping_rate)"/>
+		<param name="sleep_time" value="$(arg sleep_time)"/>
+		<param name="timeout_time" value="$(arg timeout_time)"/>
+	</node>
+
+</launch>
