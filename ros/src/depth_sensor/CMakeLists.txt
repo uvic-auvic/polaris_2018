@@ -35,7 +35,3 @@ include_directories(
 add_executable(depth_sensor_node src/depth_sensor_node.cpp)
 target_link_libraries(depth_sensor_node ${catkin_LIBRARIES})
 add_dependencies(depth_sensor_node ${depth_sensor_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-add_executable(depth_test_node src/depth_test_node.cpp)
-target_link_libraries(depth_test_node ${catkin_LIBRARIES})
-add_dependencies(depth_sensor_node ${depth_sensor_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
