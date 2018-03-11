@@ -3,10 +3,6 @@
 #include "std_msgs/String.h"
 #include "depth_sensor/depth_msg.h"
 
-using namespace std;
-
-ros::Publisher pub;
-
 int depth_from_sensor()
 {
     /***** TODO: ******/
@@ -24,11 +20,19 @@ int temperature_from_sensor()
 int main(int argc, char ** argv)
 {
     ros::init(argc, argv, "depth_sensor_node");
-    ros::NodeHandle nh;
+    ros::NodeHandle nh("~");
 
-    pub = nh.advertise<depth_sensor::depth_msg>("depth", 5);
+    // Get args from launch file
+    int loop_rate, buffered_messages;
+    nh.getParam("loop_rate", loop_rate);
+    nh.getParam("buffered_messages", buffered_messages);
+    
 
-    ros::Rate r(10); // 10 Hz
+
+    // Declare publisher
+    ros::Publisher pub = nh.advertise<depth_sensor::depth_msg>("depth", buffered_messages);
+
+    ros::Rate r(loop_rate);
     while(ros::ok())
     {
         depth_sensor::depth_msg msg;
@@ -37,9 +41,9 @@ int main(int argc, char ** argv)
         msg.depth = depth_from_sensor();
         
         pub.publish(msg);
+        
+        ros::spinOnce();
         r.sleep();
     }
-
-    ros::spin();
     return 0;
 }

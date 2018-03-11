@@ -1,3 +1,6 @@
 <launch>
+    <arg name="loop_rate" default="10"/>
+    <arg name="buffered_messages" default="10"/>
+
     <node name="depth_sensor_node" pkg="depth_sensor" type="depth_sensor_node"></node>
 </launch>
