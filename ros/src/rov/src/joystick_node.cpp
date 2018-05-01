@@ -4,7 +4,7 @@
  * @date October 2017
  * @IMPORTANT INFO you will have to modify the msg, CMakeLists.txt, package.xml,
    launchfiles and joystick_node.cpp in respects to your catkin package
-   ex: this was set up for my package "coop" in my catkin workspace, yours or 
+   ex: this was set up for my package "rov" in my catkin workspace, yours or 
    or the sumbmarine will also have a diffrent package name
 /********************************************************************/
 
@@ -16,7 +16,7 @@
 #include <sstream>
 #include <unistd.h>
 #include <iostream>
-#include "coop/joystick_message.h"
+#include "rov/joystick_message.h"
 #include "joystick.h"
 
 /********************************************************************
@@ -40,7 +40,7 @@ int main(int argc, char **argv){
      nh.getParam("timeout_time", timeout_time);
 
     /* Setup Node */
-    ros::Publisher joy_pub = nh.advertise<coop::joystick_message>(joy_pub_name, 10);
+    ros::Publisher joy_pub = nh.advertise<rov::joystick_message>(joy_pub_name, 10);
     Joystick joystick(joy_fd);
     ros::Rate loop_rate(looping_rate);
 
@@ -65,7 +65,7 @@ int main(int argc, char **argv){
     /* Poll for Joystick Samples */
     while(ros::ok()) {
         JoystickEvent event;
-        coop::joystick_message msgs;
+        rov::joystick_message msgs;
         
         if (joystick.sample(&event)) {
             int eventNumber = (int) event.number;
