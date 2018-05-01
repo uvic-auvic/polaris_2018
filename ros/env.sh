@@ -23,4 +23,13 @@ export ROS_MASTER_LOC
 echo "Using ROS_MASTER_URI $ROS_MASTER_URI"
 echo "Using ROS_IP $ROS_IP"
 
-source devel/setup.bash
+
+setup_file=setup.bash
+if [ "$SHELL" = "/bin/zsh" ]; then
+    setup_file=setup.zsh
+fi
+if [ -f devel/setup.bash ]; then
+    source devel/$setup_file
+else
+    source /opt/ros/kinetic/$setup_file
+fi
