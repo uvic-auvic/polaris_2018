@@ -20,12 +20,10 @@ echo "source /opt/ros/$ROSVERSION/setup.bash" >> ~/.bashrc
 source ~/.bashrc
 
 # Install rosinstall and other build tools
-sudo apt-get install -y python-rosinstall python-rosinstall-generator python-wstool build-essential
-
-# Install the Python Packages
-sudo apt-get install -y python3.6
-pip3 install opencv-python tensorflow
+sudo apt-get install -y python-rosinstall python-rosinstall-generator python-wstool build-essential python-pip
 
 # Install all the ROS packages
+pip install opencv-python tensorflow pyyaml
 sudo apt-get install -y ros-$ROSVERSION-serial
-sudo apt-get install -y ros-$ROSVERSION-opencv-python
+sudo apt-get install -y ros-$ROSVERSION-vision-opencv
+sudo apt-get install -y ros-$ROSVERSION-web-video-server
