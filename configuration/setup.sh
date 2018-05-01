@@ -25,8 +25,5 @@ sudo apt-get install -y python-rosinstall python-rosinstall-generator python-wst
 # Install all the ROS packages
 pip install opencv-python tensorflow pyyaml
 sudo apt-get install -y ros-$ROSVERSION-serial
-sudo apt-get install -y ros-$ROSVERSION-opencv-python
-
-cd ../ros/src
-git clone https://github.com/RobotWebTools/web_video_server
-git clone https://github.com/GT-RAIL/async_web_server_cpp
+sudo apt-get install -y ros-$ROSVERSION-vision-opencv
+sudo apt-get install -y ros-$ROSVERSION-web-video-server
