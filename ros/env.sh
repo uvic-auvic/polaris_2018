@@ -17,12 +17,11 @@ elif [[ $# -eq 1 ]]; then # TODO: Replace this with a regex test to test IP vali
 fi
 
 export ROS_MASTER_URI="http://$HOST:$PORT"
-export ROS_IP="${DEFAULT_IP// /}"
+#export ROS_IP="${DEFAULT_IP// /}"
 export ROS_MASTER_LOC
 
-echo "Using ROS_MASTER_URI $ROS_MASTER_URI"
-echo "Using ROS_IP $ROS_IP"
-
+#echo "Using ROS_MASTER_URI $ROS_MASTER_URI"
+#echo "Using ROS_IP $ROS_IP"
 
 setup_file=setup.bash
 if [ "$SHELL" = "/bin/zsh" ]; then
@@ -33,3 +32,5 @@ if [ -f devel/setup.bash ]; then
 else
     source /opt/ros/kinetic/$setup_file
 fi
+
+unset ROS_IP
