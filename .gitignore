@@ -3,7 +3,6 @@ ros/build
 ros/devel
 ros/src/CMakeLists.txt
 ros/src/CMakeLists.txt.*
-ros/*.launch
 
 # Video streaming things
 ros/src/async_web_server_cpp
