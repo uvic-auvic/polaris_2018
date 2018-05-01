@@ -1,0 +1,20 @@
+## ROS Ignores
+ros/build
+ros/devel
+ros/src/CMakeLists.txt
+ros/src/CMakeLists.txt.*
+ros/*.launch
+
+
+## Python
+*.pyo
+*.pyc
+
+## Misc things
+*/*~
+ros/src/.vscode
+ros/.vscode
+ros/.catkin_workspace
+.vscode
+
+
