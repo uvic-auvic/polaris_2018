@@ -7,6 +7,7 @@ ros/src/CMakeLists.txt.*
 # Video streaming things
 ros/src/async_web_server_cpp
 ros/src/web_video_server
+ros/src/gscam
 
 ## Python
 *.pyo
