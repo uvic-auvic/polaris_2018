@@ -7,7 +7,7 @@
 dev libgstreamer-plugins-good1.0-dev
 cd ../ros/src
 git clone https://github.com/ros-drivers/gscam
-
+sudo apt-get install -y x11vnc
 ./common-packages.sh
 
 echo "Add '-DGSTREAMER_VERSION_1_x=0n' to the EXTRA_CMAKE_FLAGS in the gscam package"
