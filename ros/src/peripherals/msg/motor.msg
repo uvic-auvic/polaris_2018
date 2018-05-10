@@ -1,0 +1,2 @@
+int8 motor_number
+int8 motor_argument
