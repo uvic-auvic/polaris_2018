@@ -4,6 +4,9 @@ ros/devel
 ros/src/CMakeLists.txt
 ros/src/CMakeLists.txt.*
 
+#Other CMake projects
+ros/src/gscam
+
 ## Python
 *.pyo
 *.pyc

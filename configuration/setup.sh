@@ -23,8 +23,4 @@ source ~/.bashrc
 sudo apt-get install -y python-rosinstall python-rosinstall-generator python-wstool build-essential python-pip
 
 # Install all the ROS packages
-pip install opencv-python tensorflow pyyaml
-sudo apt-get install -y ros-$ROSVERSION-serial
-sudo apt-get install -y ros-$ROSVERSION-vision-opencv
-sudo apt-get install -y ros-$ROSVERSION-web-video-server
-sudo apt-get install -y ros-$ROSVERSION-rosbridge-suite
+./common-package.sh
