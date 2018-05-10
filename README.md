@@ -14,4 +14,4 @@ All the code related to the operation of the polaris 2018 AUVIC submarine
 
 5. Your catkin workspace is now set up inside your local git fork.
 
-6. Add the remote upstream when `git remote add upstream https://github.com/uvic-auvic/polaris.git`
+6. Add the remote upstream with `git remote add upstream https://github.com/uvic-auvic/polaris.git`
