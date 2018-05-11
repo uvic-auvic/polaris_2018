@@ -8,10 +8,18 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   message_generation
+  serial
+)
+
+add_service_files(
+   FILES
+   motor.srv
+   motors.srv
 )
 
 add_message_files(
-  DIRECTORY msg FILES depth_msg.msg
+  FILES
+  depth.msg
 )
 
 ## Generate added messages and services with any dependencies listed here
@@ -31,6 +39,12 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
+find_package(serial REQUIRED)
+
 add_executable(depth_sensor_node src/depth_sensor_node.cpp)
 target_link_libraries(depth_sensor_node ${catkin_LIBRARIES})
 add_dependencies(depth_sensor_node peripherals_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
+
+add_executable(motor_controller src/motor_controller.cpp)
+target_link_libraries(motor_controller ${catkin_LIBRARIES} ${serial_LIBRARIES})
+add_dependencies(motor_controller peripherals_generate_messages_cpp ${catkin_EXPORTED_TARGETS})

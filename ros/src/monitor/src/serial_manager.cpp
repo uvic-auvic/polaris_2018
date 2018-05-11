@@ -19,7 +19,7 @@ using GetSerialsRes = monitor::GetSerialDevices::Response;
 
 class device_manager {
 public:
-    device_manager(int baud_rate, int timeout);
+    device_manager(int, int);
     bool get_all_devices(GetSerialsReq &, GetSerialsRes &);
     bool get_device_by_name(GetSerialReq &, GetSerialRes &);
 private:
