@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <ros/ros.h>
 #include "std_msgs/String.h"
-#include "peripherals/depth_msg.h"
+#include "peripherals/depth.h"
 
 int depth_from_sensor()
 {
@@ -27,15 +27,13 @@ int main(int argc, char ** argv)
     nh.getParam("loop_rate", loop_rate);
     nh.getParam("buffered_messages", buffered_messages);
     
-
-
     // Declare publisher
-    ros::Publisher pub = nh.advertise<peripherals::depth_msg>("depth", buffered_messages);
+    ros::Publisher pub = nh.advertise<peripherals::depth>("depth", buffered_messages);
 
     ros::Rate r(loop_rate);
     while(ros::ok())
     {
-        peripherals::depth_msg msg;
+        peripherals::depth msg;
 
         msg.temperature = temperature_from_sensor();
         msg.depth = depth_from_sensor();

@@ -4,9 +4,7 @@ ros/devel
 ros/src/CMakeLists.txt
 ros/src/CMakeLists.txt.*
 
-# Video streaming things
-ros/src/async_web_server_cpp
-ros/src/web_video_server
+#Other CMake projects
 ros/src/gscam
 
 ## Python
@@ -19,5 +17,5 @@ ros/src/.vscode
 ros/.vscode
 ros/.catkin_workspace
 .vscode
-
+ros/test.launch
 
