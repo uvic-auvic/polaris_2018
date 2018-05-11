@@ -19,14 +19,14 @@ using GetSerialsRes = monitor::GetSerialDevices::Response;
 
 class device_manager {
 public:
-    device_manager(int, int);
+    device_manager(int baud_rate = 9600, int timeout = 1000);
     bool get_all_devices(GetSerialsReq &, GetSerialsRes &);
     bool get_device_by_name(GetSerialReq &, GetSerialRes &);
 private:
     SerialDeviceMap devices;
 };
 
-device_manager::device_manager(int baud_rate = 9600, int timeout = 1000) {
+device_manager::device_manager(int baud_rate, int timeout) {
     std::vector<serial::PortInfo> devices_found = serial::list_ports();
 
 	for(auto device = devices_found.begin(); device != devices_found.end(); ++device) {

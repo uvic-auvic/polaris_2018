@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(rov)
+project(navigation)
 set(CMAKE_CXX_FLAGS "-std=c++11")
 
 find_package(catkin REQUIRED COMPONENTS
@@ -11,7 +11,8 @@ find_package(catkin REQUIRED COMPONENTS
 
 ## Generate messages in the 'msg' folder
  add_message_files(
-   DIRECTORY msg FILES joystick_message.msg
+   FILES
+   rov.msg
  )
 
 
@@ -32,9 +33,9 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_executable(joystick_node src/joystick_node.cpp src/joystick.cpp)
-target_link_libraries(joystick_node ${catkin_LIBRARIES})
-add_dependencies(joystick_node rov_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
+add_executable(rov src/rov.cpp)
+target_link_libraries(rov ${catkin_LIBRARIES})
+add_dependencies(rov navigation_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 
 
 

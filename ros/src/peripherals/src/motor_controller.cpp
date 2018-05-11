@@ -1,7 +1,5 @@
 #include <ros/ros.h>
-#include <iomanip>
 #include <string>
-#include <sstream>
 #include <memory>
 #include <serial/serial.h>
 
@@ -20,7 +18,7 @@ using rosserv = ros::ServiceServer;
 
 class motor_controller {
 public:
-    motor_controller(std::string, int, int);
+    motor_controller(std::string port, int baud_rate = 9600, int timeout = 1000);
     ~motor_controller();
     bool setMotorForward(MotorReq &, MotorRes &);
     bool setMotorReverse(MotorReq &, MotorRes &);
@@ -30,10 +28,10 @@ public:
     bool getRPM(MotorsReq &, MotorsRes &);
 private:
     std::unique_ptr<serial::Serial> connection = nullptr;
-    std::string write(std::string, bool, std::string);
+    std::string write(std::string out, bool ignore_response = true, std::string eol = "\n");
 };
 
-motor_controller::motor_controller(std::string port, int baud_rate = 9600, int timeout = 1000) {
+motor_controller::motor_controller(std::string port, int baud_rate, int timeout) {
     ROS_INFO("Connecting to motor_controller on port: %s", port.c_str());
     connection = std::unique_ptr<serial::Serial>(new serial::Serial(port, (u_int32_t) baud_rate, serial::Timeout::simpleTimeout(timeout)));
 }
@@ -44,7 +42,7 @@ motor_controller::~motor_controller() {
     connection->close();
 }
 
-std::string motor_controller::write(std::string out, bool ignore_response = true, std::string eol = "\n")
+std::string motor_controller::write(std::string out, bool ignore_response, std::string eol)
 {
     connection->write(out + eol);
     ROS_INFO("%s", out.c_str());
@@ -57,9 +55,7 @@ std::string motor_controller::write(std::string out, bool ignore_response = true
 bool motor_controller::setMotorForward(MotorReq &req, MotorRes &res)
 {
     std::string out = "M" + std::to_string(req.motor_number) + "F";
-    std::stringstream motor_param;
-    motor_param << std::setw(2) << std::setfill('0') << std::to_string(req.motor_argument);
-    out += motor_param.str();
+    out += std::to_string(req.motor_argument / 10) + std::to_string(req.motor_argument % 10);
     this->write(out);
     return true;
 }
@@ -67,9 +63,7 @@ bool motor_controller::setMotorForward(MotorReq &req, MotorRes &res)
 bool motor_controller::setMotorReverse(MotorReq &req, MotorRes &res)
 {
     std::string out = "M" + std::to_string(req.motor_number) + "R";
-    std::stringstream motor_param;
-    motor_param << std::setw(2) << std::setfill('0') << std::to_string(req.motor_argument);
-    out += motor_param.str();
+    out += std::to_string(req.motor_argument / 10) + std::to_string(req.motor_argument % 10);
     this->write(out);
     return true;
 }
@@ -77,13 +71,11 @@ bool motor_controller::setMotorReverse(MotorReq &req, MotorRes &res)
 bool motor_controller::setAllMotors(MotorsReq &req, MotorsRes &res)
 {
     std::string out = "MSA";
-    std::stringstream motor_param;
     for (auto motor_power : req.arguments) {
         std::string dir = motor_power > 0 ? "F" : "R";
         motor_power = motor_power < 0 ? motor_power * -1 : motor_power;
-        motor_param << dir << std::setw(2) << std::setfill('0') << std::to_string(motor_power);
+        out += std::to_string(motor_power / 10) + std::to_string(motor_power % 10);
     }
-    out += motor_param.str();
     this->write(out);
     return true;
 }
