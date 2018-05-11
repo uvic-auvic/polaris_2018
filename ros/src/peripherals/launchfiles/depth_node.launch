@@ -2,7 +2,7 @@
     <arg name="loop_rate" default="10"/>
     <arg name="buffered_messages" default="10"/>
 
-    <node name="depth_sensor_node" pkg="rov" type="depth_sensor_node">
+    <node name="depth_sensor" pkg="peripherals" type="depth_sensor">
         <param name="loop_rate" value="$(arg loop_rate)"/>
 		<param name="buffered_messages" value="$(arg buffered_messages)"/>
     </node>

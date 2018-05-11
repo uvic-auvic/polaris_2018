@@ -1,3 +1,3 @@
 string device_id
 ---
-SerialDevice device
+string device_fd

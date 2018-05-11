@@ -27,8 +27,6 @@ int main(int argc, char ** argv)
     nh.getParam("loop_rate", loop_rate);
     nh.getParam("buffered_messages", buffered_messages);
     
-
-
     // Declare publisher
     ros::Publisher pub = nh.advertise<peripherals::depth>("depth", buffered_messages);
 

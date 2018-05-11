@@ -63,7 +63,7 @@ bool device_manager::get_device_by_name(GetSerialReq &req, GetSerialRes &res) {
     }
 
     ROS_INFO("found Device with name \"%s\"\n", req.device_id.c_str());
-    res.device = it->second;
+    res.device_fd = it->second.port;
     return true;
 }
 
