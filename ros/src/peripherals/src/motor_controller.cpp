@@ -72,9 +72,12 @@ bool motor_controller::setAllMotors(MotorsReq &req, MotorsRes &res)
 {
     std::string out = "MSA";
     for (auto motor_power : req.arguments) {
-        std::string dir = motor_power > 0 ? "F" : "R";
-        motor_power = motor_power < 0 ? motor_power * -1 : motor_power;
-        out += std::to_string(motor_power / 10) + std::to_string(motor_power % 10);
+        std::string dir = "F";
+        if (motor_power < 0) {
+            dir = "R";
+            motor_power *= -1;
+        }
+        out += dir + std::to_string(motor_power / 10) + std::to_string(motor_power % 10);
     }
     this->write(out);
     return true;
