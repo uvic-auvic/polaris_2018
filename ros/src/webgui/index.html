@@ -1,9 +1,182 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <title>AUVIC Web Interface</title>
-    </head>
-    <body>
-        <img src="http://localhost:8080/stream?topic=/video/top_face_cam&type=ros_compressed"/>
-    </body>
+<html lang="en">
+<head>
+  <title>AUVIC Web Interface</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="bootstrap-3.3.7-dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/custom.css">
+  <script src="bootstrap-3.3.7-dist/js/jquery-3.3.1.min.js"></script>
+  <script src="bootstrap-3.3.7-dist/js/bootstrap.min.js"></script>
+  <script type="text/javascript" src="js/libraries/eventemitter2.min.js"></script>
+  <script type="text/javascript" src="js/libraries/roslib.min.js"></script>
+  <script type="text/javascript" type="text/javascript">
+    // Connecting to ROS
+    // -----------------
+  
+    var ros = new ROSLIB.Ros({
+      url : 'ws://localhost:9090'
+    });
+  
+    ros.on('connection', function() {
+      console.log('Connected to websocket server.');
+    });
+  
+    ros.on('error', function(error) {
+      console.log('Error connecting to websocket server: ', error);
+    });
+  
+    ros.on('close', function() {
+      console.log('Connection to websocket server closed.');
+    });
+  
+    // Subscribing to a Topic
+    // ----------------------
+  
+    var depth_node = new ROSLIB.Topic({
+      ros : ros,
+      name : '/depth_sensor_node/depth',
+      messageType : 'peripherals/depth'
+    });
+  
+    depth_node.subscribe(function(message) {
+      //console.log('Received message on ' + depth_node.name + ': ' + message.temperature);
+      $('#depth_sensor_depth').text(message.depth);
+      $('#depth_sensor_temperature').text(message.temperature);
+    });
+
+  </script>
+  <script src="js/ros_out.js" type="text/javascript" type="text/javascript"></script>
+  <script src="js/controller.js" type="text/javascript" type="text/javascript"></script>
+  <script src="js/keyboard.js" type="text/javascript" type="text/javascript"></script>
+  <script src="js/find_video_feeds.js" type="text/javascript" type="text/javascript"></script>
+</head>
+<body>
+
+<nav class="navbar navbar-default">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="#">Polaris</a>
+    </div>
+    <ul class="nav navbar-nav">
+      <li class="active"><a href="#">Home</a></li>
+      <li><a href="#Motor">Motors</a></li>
+      <li><a href="#">Page 2</a></li>
+      <li><a href="#">Page 3</a></li>
+    </ul>
+  </div>
+</nav>
+
+  <div class="container-fluid">
+
+    <div id="home_view" class="row">
+      <div class="col-lg-4">
+        <h3>Video Stream</h3>
+        <div>
+          <div id="main-video-box">
+              <img id="main-video-stream" src=""/> 
+          </div> 
+          <div id="main-video-selector">
+
+            </div>
+        </div>
+      </div>
+    <div class="col-lg-2">
+      <h3>GUI Settings</h3>
+      <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Component</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Keypress Enable</td>
+              <td>
+                  <input id="keypress_enable" type="checkbox" value="">
+              </td>
+            </tr>
+            <tr>
+              <td>Controller Enable</td>
+              <td>
+                <input id="controller_enable" type="checkbox" value="">
+              </td>
+            </tr>
+          </tbody>
+        </table>
+    </div>
+    <div class="col-lg-2">
+        <h3>System Settings</h3>
+        <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Component</th>
+                <th>Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Option 1</td>
+                <td>
+                    <input id="" type="checkbox" value="">
+                </td>
+              </tr>
+              <tr>
+                <td>Option 2</td>
+                <td>
+                  <input id="" type="checkbox" value="">
+                </td>
+              </tr>
+            </tbody>
+          </table>
+      </div>
+
+    <div class="col-lg-2">
+      <h3>System Info</h3>
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Component</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Depth Sensor Depth</td>
+            <td>
+              <p>
+              <span id="depth_sensor_depth"></span> m
+            </p>
+            </td>
+          </tr>
+          <tr>
+            <td>Depth Sensor Temperature</td>
+            <td>
+                <p>
+                <span id="depth_sensor_temperature"></span> &#8451;
+              </p>
+              </td>
+          </tr>
+          <tr>
+            <td>Nothing</td>
+            <td>
+              
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+      <div class="col-lg-2">
+        <h3>ROS Out</h3>
+        <div id="ros_out_node" class="pre-scrollable">
+
+        </div>
+      </div>
+    </div>
+  </div>
+  
+
+</body>
+
 </html>
