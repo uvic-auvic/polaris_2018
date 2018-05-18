@@ -18,7 +18,7 @@ using rosserv = ros::ServiceServer;
 
 class motor_controller {
 public:
-    motor_controller(std::string port, int baud_rate = 9600, int timeout = 1000);
+    motor_controller(const std::string & port, int baud_rate = 9600, int timeout = 1000);
     ~motor_controller();
     bool setMotorForward(MotorReq &, MotorRes &);
     bool setMotorReverse(MotorReq &, MotorRes &);
@@ -28,24 +28,23 @@ public:
     bool getRPM(MotorsReq &, MotorsRes &);
 private:
     std::unique_ptr<serial::Serial> connection = nullptr;
-    std::string write(std::string out, bool ignore_response = true, std::string eol = "\n");
+    std::string write(const std::string & out, bool ignore_response = true, std::string eol = "\n");
 };
 
-motor_controller::motor_controller(std::string port, int baud_rate, int timeout) {
+motor_controller::motor_controller(const std::string & port, int baud_rate, int timeout) {
     ROS_INFO("Connecting to motor_controller on port: %s", port.c_str());
     connection = std::unique_ptr<serial::Serial>(new serial::Serial(port, (u_int32_t) baud_rate, serial::Timeout::simpleTimeout(timeout)));
 }
 
 motor_controller::~motor_controller() {
-    std::string stop("STP");
-    this->write(stop);
+    this->write("STP");
     connection->close();
 }
 
-std::string motor_controller::write(std::string out, bool ignore_response, std::string eol)
+std::string motor_controller::write(const std::string & out, bool ignore_response, std::string eol)
 {
     connection->write(out + eol);
-    ROS_INFO("%s", out.c_str());
+    //ROS_INFO("%s", out.c_str());
     if (ignore_response) {
         return "";
     }
@@ -92,14 +91,14 @@ bool motor_controller::stopMotor(MotorReq &req, MotorRes &res)
 
 bool motor_controller::stopAllMotors(MotorReq &req, MotorRes &res)
 {
-    std::string stop("STP");
-    this->write(stop);
+    this->write("STP");
     return true;
 }
 
 bool motor_controller::getRPM(MotorsReq &req, MotorsRes &res)
 {
     std::string rpm_string = this->write("RVA", false);
+    ROS_INFO("Got: \"%s\"", rpm_string.c_str());
     if (rpm_string.size() != (NUM_CHAR_PER_MOTOR * NUM_MOTORS) + 2) { //assuming eol is \r\n
         return false;
     }

@@ -23,4 +23,4 @@ source ~/.bashrc
 sudo apt-get install -y python-rosinstall python-rosinstall-generator python-wstool build-essential python-pip
 
 # Install all the ROS packages
-./common-package.sh
+./common-packages.sh

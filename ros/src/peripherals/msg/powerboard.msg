@@ -1,0 +1,11 @@
+uint32 current_battery_1
+uint32 current_battery_2
+uint32 current_motors
+uint32 current_all
+uint32 voltage_battery_1
+uint32 voltage_battery_2
+uint32 temperature
+uint32 humidity
+uint32 water_sensor
+uint32 internal_pressure
+uint32 external_pressure
