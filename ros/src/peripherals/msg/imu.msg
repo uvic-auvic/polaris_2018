@@ -1,0 +1,4 @@
+#geometry_msgs/Vector3 stabilised_magnetic_field
+#geometry_msgs/Vector3 stabilised_acceleration
+#geometry_msgs/Vector3 compensated_angular_rate
+uint32 temperature

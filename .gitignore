@@ -13,9 +13,7 @@ ros/src/gscam
 
 ## Misc things
 */*~
-ros/src/.vscode
-ros/.vscode
 ros/.catkin_workspace
 .vscode
 ros/test.launch
-
+**/.vsocde
