@@ -5,53 +5,90 @@
 #include <algorithm>
 #include <string>
 #include <iostream>
-
+#include <stdexcept>
+#include <cstdint>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 #include "monitor/SerialDevice.h"
 #include "monitor/GetSerialDevice.h"
 #include "monitor/GetSerialDevices.h"
+#include "devices.hpp"
 
-using MapPair = std::pair<std::string, monitor::SerialDevice>;
-using SerialDeviceMap = std::map<std::string, monitor::SerialDevice>;
-using GetSerialReq = monitor::GetSerialDevice::Request;
-using GetSerialRes = monitor::GetSerialDevice::Response;
-using GetSerialsReq = monitor::GetSerialDevices::Request;
-using GetSerialsRes = monitor::GetSerialDevices::Response;
+device_manager::device_manager(const std::vector<device_property> & properties) {
+    std::vector<serial::PortInfo> ports = serial::list_ports();
+    for (auto property = properties.begin(); property != properties.end(); ++property) {
+        for(auto port = ports.begin(); port != ports.end();) {
+            
+            std::string prefix("/dev/ttyUSB");
+            if(!std::equal(prefix.begin(), prefix.end(), port->port.begin())) {
+                port = ports.erase(port); //iterator takes next position in list
+                continue;
+            }
+            
+            serial::Serial connection(port->port, (uint32_t) property->baud , property->timeout);
+            
+            bool device_found = false;
+            if (property->convert_to_bytes) {
+                // Send initial message as defined in JSON
+                uint64_t ack_message = std::stoi(property->ack_message, 0, 16);
+                uint8_t * send_data = new uint8_t[property->size_of_message];
+                for (int i = 0; i < property->size_of_message; ++i) {
+                    int j = i;
+                    if (property->big_endian_message) {
+                        j = property->size_of_message - i - 1;
+                    }
+                    send_data[j] = (uint8_t) (ack_message >> (8 * i));
+                }
+                connection.write(send_data, property->size_of_message);
 
-class device_manager {
-public:
-    device_manager(int baud_rate = 9600, int timeout = 1000);
-    bool get_all_devices(GetSerialsReq &, GetSerialsRes &);
-    bool get_device_by_name(GetSerialReq &, GetSerialRes &);
-private:
-    SerialDeviceMap devices;
-};
+                // Get response as defined in JSON
+                uint8_t * response_array = new uint8_t[property->size_of_response];
+                connection.read(response_array, property->size_of_response);
 
-device_manager::device_manager(int baud_rate, int timeout) {
-    std::vector<serial::PortInfo> devices_found = serial::list_ports();
+                // put bytes together to get our expected resonse 
+                uint64_t response = 0;
+                for (int i = 0 ; i < property->size_of_response; ++i) {
+                    int j = i;
+                    if (property->big_endian_response) {
+                        j = property->size_of_response-i-1;
+                    }
+                    response |= ((uint64_t) response_array[i]) << (8 * j);
+                }
 
-	for(auto device = devices_found.begin(); device != devices_found.end(); ++device) {
-        std::string serial_usb_prefix("/dev/ttyUSB");
-        // Lots of other tty's turn up here, we just want /dev/TTYUSBX which are USB devices
-        if (!std::equal(serial_usb_prefix.begin(), serial_usb_prefix.end(), device->port.begin())) {
-            continue;
+                // Compare expected with actual reponse
+                uint64_t expected_response = std::stoi(property->ack_response, 0 ,16);
+                device_found = expected_response == response;
+                delete [] response_array;
+                delete [] send_data; 
+            } else {
+                connection.write(property->ack_message);
+                std::string response = connection.readline(65536ul, "\n");
+                device_found = response == property->ack_response;
+            }
+
+            connection.close();
+            
+            if (device_found) {
+                monitor::SerialDevice dev;
+                dev.name = property->name;
+                dev.port = port->port;
+                devices.insert(MapPair(dev.name, dev));
+                port = ports.erase(port);
+                ROS_INFO("Found device \"%s\" on %s\n", dev.name.c_str(), dev.port.c_str());
+                break;
+            }
+            
+            ++port; 
         }
 
-        ROS_INFO("Attempting to open %s\n", device->port.c_str());
-        serial::Serial connection(device->port, (u_int32_t) baud_rate, serial::Timeout::simpleTimeout(timeout));
+        // Check if we found the device i.e is it in the map
+        SerialDeviceMap::iterator it = devices.find(property->name);
+        if (it == devices.end()) {
+            throw DeviceNotFoundException(property->name);
+        }
         
-        // Get RID, create SerialDevice instance and add to map
-        monitor::SerialDevice dev;
-        connection.write("RID\n");
-        // Strip \r\n (last 2 chars). Probably a better way to do it
-        std::string raw_string = connection.readline(65536ul, "\n");
-        dev.name = raw_string.erase(raw_string.size() - 2);
-        dev.port = device->port;
-        devices.insert(MapPair(dev.name, dev));
 
-        // Close connection
-        ROS_INFO("Connected to device \"%s\" on %s\n", dev.name.c_str(), dev.port.c_str());
-        connection.close(); 
-	}
+    }
 }
 
 bool device_manager::get_device_by_name(GetSerialReq &req, GetSerialRes &res) {
@@ -75,14 +112,56 @@ bool device_manager::get_all_devices(GetSerialsReq &req, GetSerialsRes &res) {
             return p.second; });
     return true;
 }
+
+
+void parse_json(std::vector<device_property> & json_properties, std::string json_file_location) {
+    ptree pt;
+    boost::property_tree::read_json(json_file_location, pt);
+    
+    for (ptree::const_iterator it = pt.begin(); it != pt.end(); ++it) {
+        int baud, timeout;
+        std::string msg, rsp;
+        bool convert;
+        // If this is non-auvic made serial device
+        size_t size_of_message = 0;
+        bool big_endian_message = true;
+        size_t size_of_response = 0; 
+        bool big_endian_response = true;
+        try {
+            baud = it->second.get<int>("baud");
+            msg = it->second.get<std::string>("ack_message");
+            rsp = it->second.get<std::string>("ack_response");
+            timeout = it->second.get<int>("timeout");
+            convert = it->second.get<bool>("convert_to_bytes");
+            if (convert) {
+                size_of_message = it->second.get<size_t>("size_of_message");
+                size_of_response = it->second.get<size_t>("size_of_response");
+                big_endian_message = it->second.get<size_t>("big_endian_message");
+                big_endian_response = it->second.get<size_t>("big_endian_response");
+            }
+        } catch (...) {
+            throw std::runtime_error("Failed to parse " + it->first);
+        }
+        
+        device_property new_dev(it->first, msg, rsp, baud, timeout, 
+            convert, size_of_message, size_of_response, big_endian_message, big_endian_response);
+        json_properties.push_back(new_dev);
+    }
+}
+
                                 
 int main(int argc, char ** argv) {
     // Setup ROS stuff
     ros::init(argc, argv, "device_manager");
     ros::NodeHandle nh("~");
 
-    device_manager m;
+    // Create ptree structure from JSON file
+    std::string json_file_location;
+    nh.getParam("devices_json_location", json_file_location);
+    std::vector<device_property> json_properties;
+    parse_json(json_properties, json_file_location);
 
+    device_manager m(json_properties);
     ros::ServiceServer getDevice = nh.advertiseService("GetDevicePort", &device_manager::get_device_by_name, &m);
     ros::ServiceServer getDevices = nh.advertiseService("GetAllDevices", &device_manager::get_all_devices, &m);
     ros::spin();

@@ -1,4 +1,3 @@
 <launch>
-    <!--node name="serial_manager" pkg="monitor" type="serial_manager"/-->
-    <include file="$(find peripherals)/launchfiles/imu.launch"/>
+    <include file="$(find monitor)/launchfiles/serial.launch"/>
 </launch>

@@ -1,0 +1,7 @@
+<launch>
+    <arg name="location" default="$(find monitor)/devices.json"/>
+    <node name="serial_manager" pkg="monitor" type="serial_manager">
+        <param name="devices_json_location"  value="$(arg location)"/>
+    </node>
+</launch>
+

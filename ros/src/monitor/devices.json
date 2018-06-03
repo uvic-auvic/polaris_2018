@@ -1,0 +1,22 @@
+{
+    "motor_controller" : {
+        "baud" : 9600,
+        "ack_message" : "RID\n",
+        "ack_response" : "Motor_controller\r\n",
+        "timeout": 1000,
+        "convert_to_bytes" : false
+    },
+    
+    "imu" : {
+        "baud" : 38400,
+        "ack_message" : "0xF1",
+        "ack_response" : "0xF10B780C69",
+        "timeout": 1000,
+        "convert_to_bytes" : true,
+        "size_of_message" : 1,
+        "size_of_response" : 5,
+        "big_endian_message": true,
+        "big_endian_response" : false
+        
+    }
+}
