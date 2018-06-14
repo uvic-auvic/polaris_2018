@@ -7,12 +7,14 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  geometry_msgs
 )
 
 ## Generate messages in the 'msg' folder
  add_message_files(
    FILES
-   rov.msg
+   rpy.msg
+   nav.msg
    joystick.msg
    keyboard.msg
  )
@@ -22,6 +24,7 @@ find_package(catkin REQUIRED COMPONENTS
  generate_messages(
    DEPENDENCIES
    std_msgs
+   geometry_msgs
  )
 
 catkin_package(

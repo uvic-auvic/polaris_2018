@@ -11,7 +11,7 @@ window.addEventListener("gamepadconnected", function(e) {
   // ------------------
   joystick = new ROSLIB.Topic({
     ros : ros,
-    name : '/joystick',
+    name : '/nav/joystick',
     messageType : 'navigation/joystick'
   });
 });

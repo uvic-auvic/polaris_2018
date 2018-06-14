@@ -1,12 +1,6 @@
 <launch>
     <include file="$(find vision)/launchfiles/camera_one.launch"/>
-    <node name="web_video_server" pkg="web_video_server" type="web_video_server" required="true"/>
-    <include file="$(find peripherals)/launchfiles/depth_node.launch"/>    
-    <node name="roslibjs" pkg="rosbridge_server" type="rosbridge_websocket" required="true"/>
-    <node name="webserver" pkg="webgui" type="server.py" required="true"/>
-    <node name="rosapi" pkg="rosapi" type="rosapi_node">
-        <param name="topics_glob" value="[*]" />
-        <param name="services_glob" value="[*]" />
-        <param name="params_glob" value="[*]" />
-    </node>
+    <include file="$(find peripherals)/launchfiles/depth_node.launch"/> 
+    <include file="$(find webgui)/webgui.launch"/>
+    <node name="rov" pkg="navigation" type="rov"/>
 </launch>

@@ -1,6 +1,6 @@
 keyboard = new ROSLIB.Topic({
     ros : ros,
-    name : '/keyboard',
+    name : '/nav/keyboard',
     messageType : 'navigation/keyboard'
 });
 
@@ -8,11 +8,12 @@ var keysDown = {
 
 }
 
-var ALLOWED_KEY_CODES = [65, 68, 83, 87];
-
 function send_keyboard_msg(keys){
     var info = new ROSLIB.Message({
-        pressed_key_codes:keys,
+        W_pressed:keys[0],
+        A_pressed:keys[1],
+        S_pressed:keys[2],
+        D_pressed:keys[3]
     });
 
     keyboard.publish(info);
@@ -30,17 +31,13 @@ $(document).keyup(function(event){
 
 function keyboard_update_loop(){
     if(document.getElementById('keypress_enable').checked){
-        var keys = [];
-        for(i in keysDown){
-            i = parseInt(i);
-            if(keysDown[i] == true && ALLOWED_KEY_CODES.indexOf(i) != -1){
-                keys.push(i);
-            }
-        }
+        send_keyboard_msg([ keysDown[87],   // W 
+                            keysDown[65],   // A
+                            keysDown[83],   // S
+                            keysDown[68]]); // D
     }else{
         keysDown = {};
     }
-    send_keyboard_msg(keys);
 }
 
 setInterval(keyboard_update_loop, 100);
