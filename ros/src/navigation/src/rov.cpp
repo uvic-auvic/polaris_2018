@@ -21,7 +21,7 @@ private:
 
 rov_mapper::rov_mapper() 
     :   nh(ros::NodeHandle("~")),
-        nav_pub(nh.advertise<navigation::nav>("/nav/nav", 5)),
+        nav_pub(nh.advertise<navigation::nav>("/nav/navigation", 5)),
         W_pressed(false),
         A_pressed(false),
         S_pressed(false),
@@ -109,5 +109,4 @@ int main(int argc, char ** argv) {
     ros::Subscriber key = nh.subscribe<navigation::keyboard>("/nav/keyboard", 1, &rov_mapper::recieve_keyboard, &controls);
     ros::spin();
     return 0;
-
 }
