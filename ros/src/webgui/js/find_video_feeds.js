@@ -2,16 +2,22 @@ ros = new ROSLIB.Ros();
 ros.connect("ws://localhost:9090");
 
 function get_topic_success(message){ 
-    console.log("success");
+    $("#main-video-selector").append("<option id='' selected> None </option>");
     for(i=0; i < message.length; i++){
-        $("#main-video-selector").append("<div class='radio'><label id=" + message[i] + "><input id=" + message[i] + " type='radio' name='optradio'>" + message[i] + "</label></div>");
+        $("#main-video-selector").append("<option id='http://localhost:8080/stream?topic=" + message[i] + "&type=ros_compressed' >" + message[i] + "</option>");
     }
 
-    $("#main-video-selector div label").click(function(event){
-        var id = event.target.id
-        var url = "http://localhost:8080/stream?topic=" + id + "&type=ros_compressed";
+    /*
+    .click() does not work for option elements in chrome. 
+    Used .change() and monitored the whole dropdown seeing if :selected moved
+    */
+    $("#main-video-selector").change(function(){
+        var url = $(this).children(":selected")[0].id;
         $("#main-video-stream").attr('src', url);
+
+        console.log($(this).children(":selected").html());
     });
+
 }
 
 function get_topic_fail(message){ 

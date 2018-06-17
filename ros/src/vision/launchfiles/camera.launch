@@ -1,0 +1,13 @@
+<launch>        
+        <!-- Vision Node -->
+
+        <arg name="node_name" default=""/>
+        <arg name="topic_name" default=""/>
+        <arg name="fd" default=""/>
+
+        <node name="$(arg node_name)" pkg="vision" type="sender" required="true">
+          <param name="name" value="$(arg topic_name)"/>
+          <param name="fd" value="$(arg fd)"/>
+        </node>
+
+</launch>
