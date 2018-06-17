@@ -1,8 +1,0 @@
-<launch>
-
-    <include file="$(find peripherals)/launchfiles/depth_node.launch"/> 
-    <include file="$(find webgui)/webgui.launch"/>
-    <node name="rov" pkg="navigation" type="rov"/>
-    <include file="$(find vision)/launchfiles/camera.launch"/>
-    
-</launch>

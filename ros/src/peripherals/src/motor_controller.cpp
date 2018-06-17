@@ -2,7 +2,6 @@
 #include <string>
 #include <memory>
 #include <serial/serial.h>
-
 #include "peripherals/motor.h"
 #include "peripherals/motors.h"
 #include "monitor/GetSerialDevice.h"

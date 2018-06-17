@@ -1,6 +1,6 @@
-#include <ros/ros.h>
 #include <sstream>
 #include <string>
+#include <ros/ros.h>
 #include "navigation/joystick.h"
 #include "navigation/keyboard.h"
 #include "navigation/nav.h"
@@ -8,8 +8,8 @@
 class rov_mapper {
 public:
     rov_mapper(); 
-    void recieve_joystick(const navigation::joystick::ConstPtr& msg);
-    void recieve_keyboard(const navigation::keyboard::ConstPtr& msg);
+    void recieve_joystick(const navigation::joystick::ConstPtr &msg);
+    void recieve_keyboard(const navigation::keyboard::ConstPtr &msg);
 private:
     ros::NodeHandle nh;
     ros::Publisher nav_pub;
@@ -42,6 +42,7 @@ void rov_mapper::recieve_joystick(const navigation::joystick::ConstPtr& msg) {
     nav_msg.rotation.roll = 0;
     nav_msg.rotation.pitch = 0;
     nav_msg.rotation.yaw = 0;
+    nav_msg.speed = 0;
 
     // check if we should stop everything
     // handy workaround to the keyboard-browser issue
@@ -49,6 +50,10 @@ void rov_mapper::recieve_joystick(const navigation::joystick::ConstPtr& msg) {
         nav_pub.publish(nav_msg);
         return;
     }
+
+    // Range of axis is [-100,100]
+    // normalize to [0,100] by +100 then divide by 2
+    nav_msg.speed = (msg->axes[2] + 100) / 2;
 
     // Check if we should go up or not
     if (up_pressed) {

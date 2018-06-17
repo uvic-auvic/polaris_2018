@@ -8,14 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   geometry_msgs
-  actionlib
-  actionlib_msgs
 )
-
-## Generate action files
-add_action_files(DIRECTORY action FILES 
-  Thrust.action
-  ) 
 
 ## Generate messages in the 'msg' folder
  add_message_files(
@@ -32,7 +25,6 @@ add_action_files(DIRECTORY action FILES
    DEPENDENCIES
    std_msgs
    geometry_msgs
-   actionlib_msgs
  )
 
 catkin_package(

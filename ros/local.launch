@@ -1,0 +1,8 @@
+<launch>
+    <include file="$(find vision)/launchfiles/camera.launch"/>
+    <include file="$(find webgui)/webgui.launch"/>
+    <!--Maually call nodes which dont need launchfiles-->
+    <node name="rov" pkg="navigation" type="rov"/>
+    <node name="thrustmap" pkg="navigation" type="thrustmap"/>
+
+</launch>

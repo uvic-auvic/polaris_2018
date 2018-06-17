@@ -1,46 +1,51 @@
 #include <ros/ros.h>
-#include <actionlib/server/simple_action_server.h>
-#include "navigation/ThrustAction.h"
 #include "navigation/nav.h"
+#include "peripherals/motor.h"
+#include "peripherals/motors.h"
 
-/*  The matrix E was precomputed in Matlab/Octave then dumped here. 
-    The method, summarized below, can be found in Chris Carpenter's Report
-    ..
-*/
-
-const float e_matrix[3][7] = {
-        {0.35355, 0.35292, 0.35355, 0.35292, 0.00141, 0.00141, 0.02099},
-        {0.35355, -0.35292, 0.35355, -0.35292, -0.00141, -0.00141, -0.02099},
-        {-0.00000, 0.00199, 0.00000, 0.00199, 0.49554, 0.49554, -0.06646}};
-
-class thrust_mapper 
+class thrust_controller
 {
 public:
-    thrust_mapper();
-    void generate_thrust_val(const navigation::ThrustGoalConstPtr &goal);
-    
+    thrust_controller(std::string node_name);
+    void generate_thrust_val(const navigation::nav::ConstPtr &msg);
 private:
     ros::NodeHandle nh;
-    actionlib::SimpleActionServer<navigation::ThrustAction> as;
+    ros::ServiceClient motor_forward;
+    ros::ServiceClient motor_reverse;
+    ros::ServiceClient motor_set_all;
+    ros::ServiceClient motor_stop;
+    ros::ServiceClient motors_stop;
+    const float EMatrix[5][5];
 };
 
-thrust_mapper::thrust_mapper() :
-    nh("~"),
-    as(nh, "thrustmap", boost::bind(&thrust_mapper::generate_thrust_val, this, _1), false)
-{
-    as.start();
-}
+thrust_controller::thrust_controller(std::string node_name) :
+    nh(ros::NodeHandle("~")),
+    motor_forward(nh.serviceClient<peripherals::motor>(node_name + "/setMotorForward")),
+    motor_reverse(nh.serviceClient<peripherals::motor>(node_name + "/setMotorReverse")),
+    motor_set_all(nh.serviceClient<peripherals::motor>(node_name + "/setAllMotors")),
+    motor_stop(nh.serviceClient<peripherals::motor>(node_name + "/stopMotors")),
+    motors_stop(nh.serviceClient<peripherals::motor>(node_name + "/stopAllMotors")),
+    EMatrix{
+        {0,0,0,0,0},
+        {0,0,0,0,0},
+        {0,0,0,0,0},
+        {0,0,0,0,0},
+        {0,0,0,0,0}
+    } { }
 
-void thrust_mapper::generate_thrust_val(const navigation::ThrustGoalConstPtr &goal)
+void thrust_controller::generate_thrust_val(const navigation::nav::ConstPtr &msg)
 {
-
+    ROS_INFO("X: %.2f Y: %.2f Z: %.2f Speed: %d\n"
+    , msg->direction.x, msg->direction.y, msg->direction.z, msg->speed);
 }
 
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "thrustmap");
     ros::NodeHandle nh("~");
-    thrust_mapper m;
+    thrust_controller tc("motor_controller");
+    ros::Subscriber joy = nh.subscribe<navigation::nav>
+        ("/nav/navigation", 1, &thrust_controller::generate_thrust_val, &tc);
     ros::spin();
     return 0;
 }
