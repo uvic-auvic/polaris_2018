@@ -1,9 +1,9 @@
 <launch>        
         <!-- Vision Node -->
 
-        <arg name="node_name" default=""/>
-        <arg name="topic_name" default=""/>
-        <arg name="fd" default=""/>
+        <arg name="node_name" 
+        <arg name="topic_name"/>
+        <arg name="fd"/>
 
         <node name="$(arg node_name)" pkg="vision" type="sender" required="true">
           <param name="name" value="$(arg topic_name)"/>
