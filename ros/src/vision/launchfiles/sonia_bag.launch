@@ -1,0 +1,9 @@
+<launch>
+    <arg name="bag_location"/>
+    <arg name="node_name"/>
+    <arg name="topic" />
+    <arg name="message"/>
+    
+    <node pkg="rosbag" type="play" name="$(arg node_name)" output="screen" args="-l -q $(arg bag_location)"/>
+    <node name="$(arg node_name)_republish" type="republish" pkg="image_transport" output="screen" args="compressed in:=$(arg topic) out:=$(arg message)" />
+</launch>

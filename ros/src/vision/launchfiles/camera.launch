@@ -1,0 +1,13 @@
+<launch>        
+        <!-- Vision Node -->
+
+        <arg name="node_name" default="camera_one"/>
+        <arg name="topic_name" default="top_face_cam"/>
+        <arg name="fd" default="/dev/video0"/>
+
+        <node name="$(arg node_name)" pkg="vision" type="sender" required="true">
+          <param name="name" value="$(arg topic_name)"/>
+          <param name="fd" value="$(arg fd)"/>
+        </node>
+
+</launch>

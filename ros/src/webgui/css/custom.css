@@ -5,3 +5,7 @@ img{
 #ros_out_node p {
     margin: 0px;
 }
+
+#main-video-selector{
+    min-width: 100%;
+}
