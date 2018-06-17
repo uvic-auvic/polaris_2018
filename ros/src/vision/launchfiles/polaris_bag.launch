@@ -1,0 +1,6 @@
+<launch>
+    <arg name="bag_location"/>
+    <arg name="node_name"/>
+    
+    <node pkg="rosbag" type="play" name="$(arg node_name)" output="screen" args="-l -q $(arg bag_location)"/>
+</launch>
