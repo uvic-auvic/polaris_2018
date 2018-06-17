@@ -3,18 +3,6 @@
     <include file="$(find peripherals)/launchfiles/depth_node.launch"/> 
     <include file="$(find webgui)/webgui.launch"/>
     <node name="rov" pkg="navigation" type="rov"/>
-
-    <include file="$(find vision)/launchfiles/camera.launch">
-        <arg name="fd" value="/dev/video0" />
-        <arg name="topic_name" value="top_face_cam" />
-        <arg name="node_name" value="camera_one" />
-    </include>
-
-    <!--
-    <include file="$(find vision)/launchfiles/camera.launch">
-        <arg name="fd" value="/dev/video1" />
-        <arg name="topic_name" value="front_cam" />
-        <arg name="node_name" value="camera_two" />
-    </include>
-    -->
+    <include file="$(find vision)/launchfiles/camera.launch"/>
+    
 </launch>
