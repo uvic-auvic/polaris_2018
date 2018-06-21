@@ -7,6 +7,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  peripherals
   geometry_msgs
 )
 
@@ -45,5 +46,3 @@ add_dependencies(rov navigation_generate_messages_cpp ${catkin_EXPORTED_TARGETS}
 add_executable(thrustmap src/thrustmap.cpp)
 target_link_libraries(thrustmap ${catkin_LIBRARIES})
 add_dependencies(thrustmap navigation_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
-
-

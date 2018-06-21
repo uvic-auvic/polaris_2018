@@ -27,10 +27,11 @@ public:
 class device_property {
 public:
     device_property(
-        string name, string ack_m, string ack_r, int baud, int timeout, 
+        string name, bool ignore, string ack_m, string ack_r, int baud, int timeout, 
         bool convert_to_bytes, size_t size_of_message, size_t size_of_response,
         bool big_endian_message, bool big_endian_response)
      : name(name)
+     , ignore(ignore)
      , ack_message(ack_m)
      , ack_response(ack_r)
      , baud(baud)
@@ -41,6 +42,7 @@ public:
      , big_endian_message(big_endian_message)
      , big_endian_response(big_endian_response) {}
     std::string name;
+    bool ignore;
     std::string ack_message;
     std::string ack_response;
     int baud;

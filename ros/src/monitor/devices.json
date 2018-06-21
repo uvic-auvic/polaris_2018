@@ -1,5 +1,6 @@
 {
     "motor_controller" : {
+	"ignore" : false,
         "baud" : 9600,
         "ack_message" : "RID\n",
         "ack_response" : "Motor_controller\r\n",
@@ -8,6 +9,7 @@
     },
     
     "imu" : {
+	"ignore" : false,
         "baud" : 38400,
         "ack_message" : "0xF1",
         "ack_response" : "0xF10B780C69",
@@ -16,7 +18,7 @@
         "size_of_message" : 1,
         "size_of_response" : 5,
         "big_endian_message": true,
-        "big_endian_response" : false
+        "big_endian_response" : true
         
     }
 }

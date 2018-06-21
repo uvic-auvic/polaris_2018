@@ -1,4 +1,11 @@
-#geometry_msgs/Vector3 stabilised_magnetic_field
-#geometry_msgs/Vector3 stabilised_acceleration
-#geometry_msgs/Vector3 compensated_angular_rate
-uint32 temperature
+geometry_msgs/Vector3 stabilised_magnetic_field
+geometry_msgs/Vector3 stabilised_acceleration
+geometry_msgs/Vector3 compensated_angular_rate
+float64 stabilised_vectors_timestamp
+geometry_msgs/Vector3 magnetic_field
+geometry_msgs/Vector3 acceleration
+geometry_msgs/Vector3 angular_rate
+float64 instantaneous_vectors_timestamp
+geometry_msgs/Vector3 velocity
+peripherals/orientation euler_angles
+float64 temperature

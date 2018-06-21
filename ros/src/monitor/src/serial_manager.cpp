@@ -17,6 +17,11 @@
 device_manager::device_manager(const std::vector<device_property> & properties) {
     std::vector<serial::PortInfo> ports = serial::list_ports();
     for (auto property = properties.begin(); property != properties.end(); ++property) {
+
+	if(property->ignore) {
+            continue;
+	}
+
         for(auto port = ports.begin(); port != ports.end();) {
             
             std::string prefix("/dev/ttyUSB");
@@ -25,12 +30,13 @@ device_manager::device_manager(const std::vector<device_property> & properties) 
                 continue;
             }
             
-            serial::Serial connection(port->port, (uint32_t) property->baud , property->timeout);
+            std::unique_ptr<serial::Serial> connection = std::unique_ptr<serial::Serial>(
+                new serial::Serial(port->port, (uint32_t) property->baud, property->timeout));
             
             bool device_found = false;
             if (property->convert_to_bytes) {
                 // Send initial message as defined in JSON
-                uint64_t ack_message = std::stoi(property->ack_message, 0, 16);
+                uint64_t ack_message = std::stoul(property->ack_message, 0, 16);
                 uint8_t * send_data = new uint8_t[property->size_of_message];
                 for (int i = 0; i < property->size_of_message; ++i) {
                     int j = i;
@@ -39,11 +45,11 @@ device_manager::device_manager(const std::vector<device_property> & properties) 
                     }
                     send_data[j] = (uint8_t) (ack_message >> (8 * i));
                 }
-                connection.write(send_data, property->size_of_message);
+                connection->write(send_data, property->size_of_message);
 
                 // Get response as defined in JSON
                 uint8_t * response_array = new uint8_t[property->size_of_response];
-                connection.read(response_array, property->size_of_response);
+                connection->read(response_array, property->size_of_response);
 
                 // put bytes together to get our expected resonse 
                 uint64_t response = 0;
@@ -56,17 +62,17 @@ device_manager::device_manager(const std::vector<device_property> & properties) 
                 }
 
                 // Compare expected with actual reponse
-                uint64_t expected_response = std::stoi(property->ack_response, 0 ,16);
+                uint64_t expected_response = std::stoul(property->ack_response, 0 ,16);
                 device_found = expected_response == response;
                 delete [] response_array;
                 delete [] send_data; 
             } else {
-                connection.write(property->ack_message);
-                std::string response = connection.readline(65536ul, "\n");
+                connection->write(property->ack_message);
+                std::string response = connection->readline(65536ul, "\n");
                 device_found = response == property->ack_response;
             }
 
-            connection.close();
+            connection->close();
             
             if (device_found) {
                 monitor::SerialDevice dev;
@@ -86,8 +92,6 @@ device_manager::device_manager(const std::vector<device_property> & properties) 
         if (it == devices.end()) {
             throw DeviceNotFoundException(property->name);
         }
-        
-
     }
 }
 
@@ -121,13 +125,14 @@ void parse_json(std::vector<device_property> & json_properties, std::string json
     for (ptree::const_iterator it = pt.begin(); it != pt.end(); ++it) {
         int baud, timeout;
         std::string msg, rsp;
-        bool convert;
+        bool ignore, convert;
         // If this is non-auvic made serial device
         size_t size_of_message = 0;
         bool big_endian_message = true;
         size_t size_of_response = 0; 
         bool big_endian_response = true;
         try {
+            ignore = it->second.get<bool>("ignore");
             baud = it->second.get<int>("baud");
             msg = it->second.get<std::string>("ack_message");
             rsp = it->second.get<std::string>("ack_response");
@@ -136,14 +141,14 @@ void parse_json(std::vector<device_property> & json_properties, std::string json
             if (convert) {
                 size_of_message = it->second.get<size_t>("size_of_message");
                 size_of_response = it->second.get<size_t>("size_of_response");
-                big_endian_message = it->second.get<size_t>("big_endian_message");
-                big_endian_response = it->second.get<size_t>("big_endian_response");
+                big_endian_message = it->second.get<bool>("big_endian_message");
+                big_endian_response = it->second.get<bool>("big_endian_response");
             }
         } catch (...) {
             throw std::runtime_error("Failed to parse " + it->first);
         }
         
-        device_property new_dev(it->first, msg, rsp, baud, timeout, 
+        device_property new_dev(it->first, ignore, msg, rsp, baud, timeout, 
             convert, size_of_message, size_of_response, big_endian_message, big_endian_response);
         json_properties.push_back(new_dev);
     }

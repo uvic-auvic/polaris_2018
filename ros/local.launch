@@ -1,6 +1,8 @@
 <launch>
     <include file="$(find vision)/launchfiles/camera.launch"/>
     <include file="$(find webgui)/webgui.launch"/>
+    <include file="$(find monitor)/launchfiles/serial.launch"/>
+    <include file="$(find peripherals)/launchfiles/imu.launch"/>
     <!--Maually call nodes which dont need launchfiles-->
     <node name="rov" pkg="navigation" type="rov"/>
     <node name="thrustmap" pkg="navigation" type="thrustmap"/>

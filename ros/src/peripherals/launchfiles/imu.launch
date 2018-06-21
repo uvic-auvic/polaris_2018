@@ -1,6 +1,22 @@
 <launch>
-    <arg name="device_id" default="IMU"/>
-    <node name="imu" pkg="peripherals" type="imu" respawn="true" respawn_delay="1" >
+    <arg name="node_name" default="imu"/>
+    <arg name="topic_name" default="imu_sensor"/>
+    <arg name="topic_buffer_size" default="10"/>
+    <arg name="device_id" default="imu"/>
+    <arg name="publish_rate" default="1"/>
+    <arg name="updates_per_publish" default="100"/>
+    <arg name="record" default="false"/>
+    <arg name="save_location" default=""/>
+
+    <node name="$(arg node_name)" pkg="peripherals" type="imu" respawn="true" respawn_delay="1" >
+        <param name="topic_name" value="$(arg topic_name)"/>
+        <param name="topic_buffer_size" value="$(arg topic_buffer_size)"/>
         <param name="device_id" value="$(arg device_id)"/>
+        <param name="publish_rate" value="$(arg publish_rate)"/>
+        <param name="updates_per_publish" value="$(arg updates_per_publish)"/>
     </node>
+
+    <group if="$(arg record)">
+        <node pkg="rosbag" type="record" name="$(arg node_name)_recording" args="record /$(arg node_name)/$(arg topic_name) -o $(arg save_location)"/>
+    </group>
 </launch>

@@ -10,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   serial
   monitor
+  geometry_msgs
 )
 
 add_service_files(
@@ -23,12 +24,14 @@ add_message_files(
   depth.msg
   powerboard.msg
   imu.msg
+  orientation.msg
 )
 
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
   DEPENDENCIES
   std_msgs
+  geometry_msgs
 )
 
 catkin_package(
