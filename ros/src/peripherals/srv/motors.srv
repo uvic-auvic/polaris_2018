@@ -1,3 +1,3 @@
-int8[] arguments
+peripherals/motor_info[] motors_in
 ---
-int8[] results
+peripherals/motor_info[] motors_out

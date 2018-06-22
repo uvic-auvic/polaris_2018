@@ -25,6 +25,7 @@ add_message_files(
   powerboard.msg
   imu.msg
   orientation.msg
+  motor_info.msg
 )
 
 ## Generate added messages and services with any dependencies listed here

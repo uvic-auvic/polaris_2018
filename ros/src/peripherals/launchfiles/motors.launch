@@ -1,5 +1,5 @@
 <launch>
-    <arg name="device_id" default="Motor Controller"/>
+    <arg name="device_id" default="motor_controller"/>
     <node name="motor_controller" pkg="peripherals" type="motor_controller" respawn="true" respawn_delay="1" >
         <param name="device_id" value="$(arg device_id)"/>
     </node>

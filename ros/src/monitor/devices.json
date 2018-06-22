@@ -3,7 +3,7 @@
 	"ignore" : false,
         "baud" : 9600,
         "ack_message" : "RID\n",
-        "ack_response" : "Motor_controller\r\n",
+        "ack_response" : "Motor Controller\r\n",
         "timeout": 1000,
         "convert_to_bytes" : false
     },
