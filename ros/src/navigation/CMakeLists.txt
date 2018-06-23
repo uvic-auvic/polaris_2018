@@ -20,6 +20,7 @@ find_package(
    nav.msg
    joystick.msg
    keyboard.msg
+   nav_request.msg
  )
 
 
@@ -49,3 +50,7 @@ add_dependencies(rov navigation_generate_messages_cpp peripherals_generate_messa
 add_executable(thrustmap src/thrustmap.cpp)
 target_link_libraries(thrustmap ${catkin_LIBRARIES})
 add_dependencies(thrustmap navigation_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
+
+add_executable(control_system src/control_system.cpp src/controllers.cpp src/controllers.hpp src/pid.cpp src/pid.h)
+target_link_libraries(control_system ${catkin_LIBRARIES})
+add_dependencies(control_system navigation_generate_messages_cpp ${catkin_EXPORTED_TARGETS})

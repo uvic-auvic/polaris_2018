@@ -35,9 +35,9 @@ thrust_controller::thrust_controller(std::string node_name) :
 
 void thrust_controller::generate_thrust_val(const navigation::nav::ConstPtr &msg)
 {
-    ROS_INFO("X: %.2f Y: %.2f Z: %.2f Speed: %d\n"
+/*    ROS_INFO("X: %.2f Y: %.2f Z: %.2f Speed: %d\n"
     , msg->direction.x, msg->direction.y, msg->direction.z, msg->speed);
-}
+*/}
 
 int main(int argc, char **argv)
 {

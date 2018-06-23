@@ -1,3 +1,2 @@
 geometry_msgs/Vector3 direction
 peripherals/orientation orientation
-int8 speed
