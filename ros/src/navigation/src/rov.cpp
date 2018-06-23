@@ -28,7 +28,6 @@ rov_mapper::rov_mapper()
         D_pressed(false) {}
 
 void rov_mapper::recieve_joystick(const navigation::joystick::ConstPtr& msg) {
-    
     bool fire = msg->buttons[0];
     bool stop_pressed = msg->buttons[3];
     bool up_pressed = msg->buttons[1];
@@ -39,9 +38,9 @@ void rov_mapper::recieve_joystick(const navigation::joystick::ConstPtr& msg) {
     nav_msg.direction.x = 0; // forwards or backwards;
     nav_msg.direction.y = 0;// left or right;
     nav_msg.direction.z = 0;// up or down;
-    nav_msg.rotation.roll = 0;
-    nav_msg.rotation.pitch = 0;
-    nav_msg.rotation.yaw = 0;
+    nav_msg.orientation.roll = 0;
+    nav_msg.orientation.pitch = 0;
+    nav_msg.orientation.yaw = 0;
     nav_msg.speed = 0;
 
     // check if we should stop everything
@@ -85,16 +84,18 @@ void rov_mapper::recieve_joystick(const navigation::joystick::ConstPtr& msg) {
     }
 
     if (A_pressed) {
-        nav_msg.rotation.roll = 10;
+        nav_msg.orientation.roll = 10;
         nav_pub.publish(nav_msg);
         return;
     }
 
     if (S_pressed) {
-        nav_msg.rotation.roll = -10;
+        nav_msg.orientation.roll = -10;
         nav_pub.publish(nav_msg);
         return;
     }
+
+    // set motor to stop
 
 }
 

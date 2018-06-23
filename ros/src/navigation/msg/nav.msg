@@ -1,3 +1,3 @@
 geometry_msgs/Vector3 direction
-rpy rotation
+peripherals/orientation orientation
 int8 speed

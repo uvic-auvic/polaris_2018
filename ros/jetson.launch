@@ -1,6 +1,4 @@
 <launch>
     <include file="$(find vision)/launchfiles/jetson_csi_cam.launch"/>
-    <node name="web_video_server" pkg="web_video_server" type="web_video_server" required="true"/>
-    <node name="roslibjs" pkg="rosbridge_server" type="rosbridge_websocket" required="true"/>
-    <node name="webserver" pkg="webgui" type="server.py" required="true"/>
+    <include file="$(find webgui)/webgui.launch"/>
 </launch>
