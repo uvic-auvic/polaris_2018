@@ -290,9 +290,9 @@ void imu::update_velocity()
     }
 
     // Compute the velocity by integrating the acceleration using trapezoid method of integration
-    velocity.x = velocity.x + 9.8 * 0.5 * (accel_true.x - last_accel.x) * (this_time - last_timestamp) / 1000.0;
-    velocity.y = velocity.y + 9.8 * 0.5 * (accel_true.y - last_accel.y) * (this_time - last_timestamp) / 1000.0;
-    velocity.z = velocity.z + 9.8 * 0.5 * (accel_true.z - last_accel.z) * (this_time - last_timestamp) / 1000.0;
+    velocity.x = velocity.x + 9.8 * 0.5 * (accel_true.x + last_accel.x) * (this_time - last_timestamp) / 1000.0;
+    velocity.y = velocity.y + 9.8 * 0.5 * (accel_true.y + last_accel.y) * (this_time - last_timestamp) / 1000.0;
+    velocity.z = velocity.z + 9.8 * 0.5 * (accel_true.z + last_accel.z) * (this_time - last_timestamp) / 1000.0;
 
     // Update accel and timestamp
     last_accel = accel_true;
