@@ -1,0 +1,10 @@
+<launch>
+    <arg name="device_id" default="hydrophones"/>
+    <arg name="packet_size" default="400"/>
+    <arg name="data_size" default="32768"/>
+    <node name="hydrophones" pkg="peripherals" type="hydrophones" respawn="true" respawn_delay="1" >
+        <param name="device_id" value="$(arg device_id)"/>
+        <param name="packet_size" value="$(arg packet_size)"/>
+        <param name="data_size" value="$(arg data_size)"/>
+    </node>
+</launch>

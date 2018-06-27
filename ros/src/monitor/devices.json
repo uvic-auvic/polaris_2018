@@ -8,6 +8,15 @@
         "convert_to_bytes" : false
     },
     
+    "hydrophones" : {
+	"ignore" : false,
+        "baud" : 115200,
+        "ack_message" : "RID\n",
+        "ack_response" : "Hydrophones v1.0\r\n",
+        "timeout": 1000,
+        "convert_to_bytes" : false
+    },
+    
     "imu" : {
 	"ignore" : false,
         "baud" : 38400,

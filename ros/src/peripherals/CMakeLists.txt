@@ -17,6 +17,7 @@ add_service_files(
    FILES
    motor.srv
    motors.srv
+   hydro_data.srv
 )
 
 add_message_files(
@@ -26,6 +27,7 @@ add_message_files(
   imu.msg
   orientation.msg
   motor_info.msg
+  hydro.msg
 )
 
 ## Generate added messages and services with any dependencies listed here
@@ -56,7 +58,10 @@ add_executable(motor_controller src/motor_controller.cpp)
 target_link_libraries(motor_controller ${catkin_LIBRARIES} ${serial_LIBRARIES})
 add_dependencies(motor_controller monitor_generate_messages_cpp peripherals_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 
-
 add_executable(imu src/imu.cpp)
 target_link_libraries(imu ${catkin_LIBRARIES} ${serial_LIBRARIES})
 add_dependencies(imu monitor_generate_messages_cpp peripherals_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
+
+add_executable(hydrophones src/hydrophones.cpp)
+target_link_libraries(hydrophones ${catkin_LIBRARIES} ${serial_LIBRARIES})
+add_dependencies(hydrophones monitor_generate_messages_cpp peripherals_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
