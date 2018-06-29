@@ -5,8 +5,6 @@
     <arg name="device_id" default="imu"/>
     <arg name="publish_rate" default="1"/>
     <arg name="updates_per_publish" default="100"/>
-    <arg name="record" default="false"/>
-    <arg name="save_location" default=""/>
 
     <node name="$(arg node_name)" pkg="peripherals" type="imu" respawn="true" respawn_delay="1" >
         <param name="topic_name" value="$(arg topic_name)"/>
@@ -15,8 +13,4 @@
         <param name="publish_rate" value="$(arg publish_rate)"/>
         <param name="updates_per_publish" value="$(arg updates_per_publish)"/>
     </node>
-
-    <group if="$(arg record)">
-        <node pkg="rosbag" type="record" name="$(arg node_name)_recording" args="record /$(arg node_name)/$(arg topic_name) -o $(arg save_location)"/>
-    </group>
 </launch>

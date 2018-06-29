@@ -18,6 +18,7 @@ rosdep update
 # Setup environment. Comments out if you don't use bash
 echo "source /opt/ros/$ROSVERSION/setup.bash" >> ~/.bashrc
 source ~/.bashrc
+mkdir -p ~/rosbag
 
 # Install rosinstall and other build tools
 sudo apt-get install -y python-rosinstall python-rosinstall-generator python-wstool build-essential python-pip

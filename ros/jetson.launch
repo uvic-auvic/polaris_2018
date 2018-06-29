@@ -1,4 +1,11 @@
 <launch>
+    <arg name="record" default="false"/>
+    <arg name="save_location" default="$(env HOME)/rosbag/auvic"/>
+
     <include file="$(find vision)/launchfiles/jetson_csi_cam.launch"/>
     <include file="$(find webgui)/webgui.launch"/>
+
+    <group if="$(arg record)">
+          <node name="rosbag" pkg="rosbag" type="record"  args="-a -o $(arg save_location)"/> 
+    </group> 
 </launch>
