@@ -1,0 +1,4 @@
+uint16 acq_rate
+uint16 acq_count
+---
+float64 avg_data

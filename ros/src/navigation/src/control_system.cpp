@@ -4,8 +4,14 @@
 #include "navigation/nav_request.h"
 #include "peripherals/imu.h"
 #include "peripherals/powerboard.h"
+#include "peripherals/avg_data.h"
 #include "controllers.hpp"
 #include "geometry_msgs/Vector3.h"
+
+#define ATMOSPHERIC_PRESSURE (1E5)
+
+using AvgDataReq = peripherals::avg_data::Request;
+using AvgDataRes = peripherals::avg_data::Response;
 
 class control_system
 {
@@ -16,6 +22,7 @@ public:
     void receive_imu_data(const peripherals::imu::ConstPtr &msg);
     void receive_powerboard_data(const peripherals::powerboard::ConstPtr &msg);
     void compute_output_vectors(navigation::nav &msg);
+    bool calibrate_surface_depth(AvgDataReq &req, AvgDataRes &res);
 private:
     // ROS
     ros::NodeHandle nh;
@@ -32,13 +39,15 @@ private:
     navigation::nav_request::ConstPtr current_request;
     peripherals::imu::ConstPtr imu_data;
     double current_depth;
+    double surface_pressure;
 };
 
 control_system::control_system():
     nh(ros::NodeHandle("~")),
     current_request(boost::shared_ptr<navigation::nav_request>(new navigation::nav_request())),
     imu_data(boost::shared_ptr<peripherals::imu>(new peripherals::imu())),
-    current_depth(0)
+    current_depth(0),
+    surface_pressure(ATMOSPHERIC_PRESSURE)
 {
     // General Control System Parameters
     double loop_rate, min_lin_vel, max_lin_vel, min_lin_pos, max_lin_pos;
@@ -126,7 +135,27 @@ void control_system::receive_powerboard_data(const peripherals::powerboard::Cons
 {      
     // depth[m] = pressure[N/m^2] / (density[kg/m^3] * gravity[N/kg])
     constexpr float div = 997 * 9.81;
-    current_depth = msg->external_pressure / div;
+    current_depth = (msg->external_pressure - surface_pressure) / div;
+}
+
+bool control_system::calibrate_surface_depth(AvgDataReq &req, AvgDataRes &res)
+{
+    // Copy service message over and request average external pressure
+    peripherals::avg_data srv;
+    srv.request = req;
+    ros::ServiceClient ext_pres_client = nh.serviceClient<peripherals::avg_data>("/power_board/AverageExtPressure");
+
+    if(!ext_pres_client.call(srv))
+    {
+        ROS_ERROR("Failed to acquire external pressure data during depth calibration.");
+        return false;
+    }
+
+    res = srv.response;
+
+    // Update surface pressure with the average external pressure
+    surface_pressure = srv.response.avg_data;
+    return true;
 }
     
 void control_system::compute_output_vectors(navigation::nav &msg)
@@ -149,6 +178,9 @@ int main(int argc, char ** argv)
     nh.getParam("max_linear_vel", max_lin_vel);
 
     control_system ctrl;
+
+    ros::ServiceServer calib_depth = nh.advertiseService
+        ("/nav/CalibrateSurfaceDepth", &control_system::calibrate_surface_depth, &ctrl);
 
     ros::Publisher pub_vectors = nh.advertise<navigation::nav>("/nav/velocity_vectors", 1);
 
