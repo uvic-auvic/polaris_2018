@@ -1,4 +1,4 @@
-gp = null;
+
 joystick_node = null;
 
 window.addEventListener("gamepadconnected", function(e) {
@@ -21,9 +21,9 @@ window.addEventListener("gamepaddisconnected", function(e) {
     e.gamepad.index, e.gamepad.id);
 });
 
-function convert_gameController_to_json(){
+function convert_gameController_to_json(gp){
   var buttons = [];
-  for (i = 0; i < gp.buttons.length; i++) {
+  for (i = 0; i < gp.buttons.length; i++){
     var val = gp.buttons[i];
     var pressed = val == 1.0;
     if (typeof(val) == "object") {
@@ -46,15 +46,16 @@ function convert_gameController_to_json(){
 
 function controller_update_loop() {
   if(document.getElementById('controller_enable').checked){
-    gp = navigator.getGamepads()[0];
 
-    var info = new ROSLIB.Message(convert_gameController_to_json());
-    console.log(info);
-    joystick.publish(info);
+    var gps = navigator.getGamepads();
+    for(var c = 0; c < gps.length; gps++){
+      if(gps[c].id == "Logitech WingMan Attack 2 (Vendor: 046d Product: c20d)"){
+        var info = new ROSLIB.Message(convert_gameController_to_json(gps[c]));
+        //console.log(info);
+        joystick.publish(info);
+      }
+    }
   }
 }   
 
 setInterval(controller_update_loop, 100);
-
-
-

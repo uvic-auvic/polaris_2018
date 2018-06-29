@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>AUVIC Web Interface</title>
+  <title>AUVIC GUI</title>
   <meta charset="utf-8">
+  <link rel="shortcut icon" href="favicon.ico"  type="image/x-icon">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="bootstrap-3.3.7-dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="/css/custom.css">
@@ -47,17 +48,19 @@
     });
 
   </script>
-  <script src="js/ros_out.js" type="text/javascript" type="text/javascript"></script>
   <script src="js/controller.js" type="text/javascript" type="text/javascript"></script>
   <script src="js/keyboard.js" type="text/javascript" type="text/javascript"></script>
   <script src="js/find_video_feeds.js" type="text/javascript" type="text/javascript"></script>
+  <script src="js/topics/power_board.js" type="text/javascript" type="text/javascript"></script>
 </head>
 <body>
 
 <nav class="navbar navbar-default">
   <div class="container-fluid">
     <div class="navbar-header">
-      <a class="navbar-brand" href="#">Polaris</a>
+      <a class="navbar-brand" href="/index.html">Polaris</a>
+      <a class="navbar-brand" href="/system_info.html">System Info</a>
+      <a class="navbar-brand" href="/video_feed.html">Video Feeds</a>
     </div>
     <ul class="nav navbar-nav">
       <!--<li class="active"><a href="#">Home</a></li>-->
@@ -68,13 +71,14 @@
   <div class="container-fluid">
 
     <div id="home_view" class="row">
-      <div class="col-lg-4">
-        <h3>Video Stream</h3>
+      <div class="col-lg-8">
+        <!--<h3>Video Stream</h3>-->
         <div>
-          <div >
+          <div>
               <select id="main-video-selector" name="text"> <!--Supplement an id here instead of using 'text'-->
               </select>
           </div>
+
           
           <div id="main-video-box">
               <img id="main-video-stream" src=''/> 
@@ -82,15 +86,132 @@
           
         </div>
       </div>
+      <div class="col-lg-2">
+          <h2>System Info</h2>
+          <!--<h4>Power Board</h4>-->
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th class="ros_topic_title"><h4>Power Board</h4></th>
+              </tr>
+            </thead>
+            <tbody>  
+              <tr>
+                <td>Battery 1 Voltage</td>
+                <td>
+                    <p>
+                    <span id="pb_batt_1_volt"></span> V
+                  </p>
+                  </td>
+              </tr>
+              <tr>
+                <td>Battery 2 Voltage</td>
+                <td>
+                    <p>
+                    <span id="pb_batt_2_volt"></span> V
+                  </p>
+                  </td>
+              </tr>
+            <tr>
+              <td>Motor Currents</td>
+              <td>
+                <p>
+                <span id="pb_motor_curr"></span> A
+              </p>
+              </td>
+            </tr>
+            <tr>
+              <td>System Current</td>
+              <td>
+                  <p>
+                  <span id="pb_system_curr"></span> A
+                </p>
+                </td>
+            </tr>
+            <tr>
+              <td>Internal Pressure</td>
+              <td>
+                <p>
+                <span id="pb_internal_pressure"></span> PSI
+              </p>
+              </td>
+            </tr>
+            <tr>
+              <td>External Pressure</td>
+              <td>
+                <p>
+                <span id="pb_external_pressure"></span> PSI
+              </p>
+              </td>
+            </tr>
+            <tr>
+              <td>Temperature Ambient</td>
+              <td>
+                  <p>
+                  <span id="pb_temperature"></span> &#8451;
+                </p>
+                </td>
+            </tr>
+            <tr>
+              <td>Relative Humidity</td>
+              <td>
+                <p>
+                <span id="pb_rh"></span> %
+              </p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <table class="table table-hover"> 
+            <thead>
+              <tr>
+                <th class="ros_topic_title"><h4>Nav Request</h4></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Depth</td>
+                <td>
+                  <p>
+                  <span id="nav_depth"></span> m
+                </p>
+                </td>
+              </tr>
+              <tr>
+                <td>Yaw Rate</td>
+                <td>
+                    <p>
+                    <span id="yaw_rate"></span> <sup>&#176;</sup>&frasl;<sub>m</sub>
+                  </p>
+                  </td>
+              </tr>
+              <tr>
+                <td>Forward Velocity</td>
+                <td>
+                  <p>
+                  <span id="forward_velocity"></span> <sup>m</sup>&frasl;<sub>s</sub>
+                </p>
+                </td>
+              </tr>
+              <tr>
+                <td>Sideways Velocity</td>
+                <td>
+                  <p>
+                  <span id="sideways_velocity"></span> <sup>m</sup>&frasl;<sub>s</sub>
+                </p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+      </div>
     <div class="col-lg-2">
       <h3>GUI Settings</h3>
       <table class="table table-hover">
           <thead>
-            <tr>
-              <th>Component</th>
-              <th>Value</th>
-            </tr>
-          </thead>
+              <tr>
+                <th class="ros_topic_title"><h4>Control Lockout</h4></th>
+              </tr>
+            </thead>
           <tbody>
             <tr>
               <td>Keypress Enable</td>
@@ -106,80 +227,61 @@
             </tr>
           </tbody>
         </table>
-    </div>
-    <div class="col-lg-2">
+    
         <h3>System Settings</h3>
         <table class="table table-hover">
             <thead>
+                <tr>
+                  <th class="ros_topic_title"><h4>Power Board</h4></th>
+                </tr>
+              </thead>
+            <tbody id="system_settings">
               <tr>
-                <th>Component</th>
-                <th>Value</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Option 1</td>
+                <td>Motor Controller Power</td>
                 <td>
-                    <input id="" type="checkbox" value="">
+                    <input id="pb_mc_power" type="checkbox" value="">
                 </td>
               </tr>
-
               <tr>
-                <td>Option 2</td>
+                <td>Bridge Batteries</td>
                 <td>
-                  <input id="" type="checkbox" value="">
+                  <input id="pb_bridge_batteries" type="checkbox" value="">
+                </td>
+              </tr>
+              <tr>
+                <td>External 5V Power</td>
+                <td>
+                  <input id="pb_5v" type="checkbox" value="">
+                </td>
+              </tr>
+              <tr>
+                <td>External 9V and 12V Power</td>
+                <td>
+                  <input id="pb9_12_v" type="checkbox" value="">
                 </td>
               </tr>
             </tbody>
           </table>
+          <table class="table table-hover">
+          <thead>
+              <tr>
+                <th class="ros_topic_title"><h4>IMU</h4></th>
+              </tr>
+            </thead>
+          </table>
+          <button>
+            Reset IMU Vector
+          </button>
       </div>
 
-    <div class="col-lg-2">
-      <h3>System Info</h3>
-      <table class="table table-hover">
-        <thead>
-          <tr>
-            <th>Component</th>
-            <th>Value</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Depth Sensor Depth</td>
-            <td>
-              <p>
-              <span id="depth_sensor_depth"></srosrun image_transport republish compressed in:=/provider_vision/Front_GE out:=/sensor_msgs/image
-                pan> m
-            </p>
-            </td>
-          </tr>
-          <tr>
-            <td>Depth Sensor Temperature</td>
-            <td>
-                <p>
-                <span id="depth_sensor_temperature"></span> &#8451;
-              </p>
-              </td>
-          </tr>
-          <tr>
-            <td>Nothing</td>
-            <td>
-              
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-      <div class="col-lg-2">
-        <h3>ROS Out</h3>
-        <div id="ros_out_node" class="pre-scrollable">
-
-        </div>
-      </div>
-    </div>
+    
+  </div>
   </div>
   
 
 </body>
+
+<script src="js/services/power_board_services.js" type="text/javascript" type="text/javascript"></script>
+<script src="js/topics/nav.js" type="text/javascript" type="text/javascript"></script>
 
 </html>

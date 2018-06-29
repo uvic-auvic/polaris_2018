@@ -9,3 +9,12 @@ img{
 #main-video-selector{
     min-width: 100%;
 }
+
+#main-video-stream{
+    min-width: 100%;
+}
+
+.ros_topic_title{
+    font-weight: bold;
+    font-size: medium;
+}

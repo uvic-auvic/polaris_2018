@@ -20,7 +20,7 @@ ros_out.subscribe(function(message) {
 
     scroll_pos_from_top = node.scrollTop();
     var diff = (max_scroll_height - scroll_pos_from_top);
-    if( diff > compare_height && diff < 1000){
+    if( diff > compare_height && diff < 500){
         node.scrollTop(max_scroll_height);
     }
 }); 

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AUVIC GUI</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="bootstrap-3.3.7-dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/custom.css">
+<style>
+body, html {
+    min-height: 100%;
+    margin: 0;
+}
+
+.bg {
+    /* The image used */
+    /*background-image: url("http://localhost:8080/stream?topic=/video/top_face_cam&type=ros_compressed");
+
+    /* Full height */
+    min-height: 100%; 
+
+    /* Center and scale the image nicely */
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+</style>
+</head>
+<body>
+
+    <nav class="navbar navbar-default">
+        <div class="container-fluid">
+            <div class="navbar-header">
+            <a class="navbar-brand" href="/index.html">Polaris</a>
+            <a class="navbar-brand" href="/system_info.html">System Info</a>
+            <a class="navbar-brand" href="/video_feed.html">Video Feeds</a>
+            </div>
+            <ul class="nav navbar-nav">
+            <!--<li class="active"><a href="#">Home</a></li>-->
+            </ul>
+        </div>
+    </nav>
+    <div>
+        <div >
+            <select id="main-video-selector" name="text"> <!--Supplement an id here instead of using 'text'-->
+            </select>
+        </div>
+
+        
+        
+    </div>
+    <div class="container-fluid">
+        <div class="col-lg-2"></div>
+        <div class="col-lg-8">
+            <div class="bg" id="main-video-box">
+                <img id="main-video-stream" src=''/> 
+            </div>
+        </div>
+
+
+<script src="bootstrap-3.3.7-dist/js/jquery-3.3.1.min.js"></script>
+<script type="text/javascript" src="js/libraries/roslib.min.js"></script>
+<script src="js/find_video_feeds.js" type="text/javascript" type="text/javascript"></script>
+</body>
+</html>
