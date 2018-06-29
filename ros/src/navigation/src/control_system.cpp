@@ -1,5 +1,4 @@
 #include <ros/ros.h>
-
 #include "navigation/nav.h"
 #include "navigation/nav_request.h"
 #include "peripherals/imu.h"

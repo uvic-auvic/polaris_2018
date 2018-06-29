@@ -1,3 +1,3 @@
-peripherals/motor_info[] motors_in
+int16[] pwms
 ---
-peripherals/motor_info[] motors_out
+int16[] rpms

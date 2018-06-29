@@ -45,10 +45,11 @@ function convert_gameController_to_json(){
 }
 
 function controller_update_loop() {
-  if(gp != null && document.getElementById('controller_enable').checked){
-    
+  if(document.getElementById('controller_enable').checked){
+    gp = navigator.getGamepads()[0];
 
     var info = new ROSLIB.Message(convert_gameController_to_json());
+    console.log(info);
     joystick.publish(info);
   }
 }   

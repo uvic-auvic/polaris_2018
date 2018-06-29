@@ -37,6 +37,5 @@
         "size_of_response" : 5,
         "big_endian_message": true,
         "big_endian_response" : true
-        
     }
 }

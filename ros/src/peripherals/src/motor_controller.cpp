@@ -1,17 +1,17 @@
 #include <ros/ros.h>
 #include <string>
 #include <memory>
-#include <map>
 #include <serial/serial.h>
 #include "peripherals/motor.h"
 #include "peripherals/motors.h"
 #include "monitor/GetSerialDevice.h"
+#include "peripherals/motor_enums.h"
 
 #define NUM_MOTORS (8)
 #define NUM_CHAR_PER_RPM (2)
 #define NUM_CHAR_PER_PWM (2)
 #define NUM_CHAR_PER_DIR (1)
-#define MAX_MOTOR_VALUE (99)
+#define MAX_MOTOR_VALUE (999)
 
 using MotorReq = peripherals::motor::Request;
 using MotorRes = peripherals::motor::Response;
@@ -28,10 +28,9 @@ public:
     bool stopMotor(MotorReq &req, MotorRes &res);
     bool stopAllMotors(MotorReq &, MotorRes &);
     bool getRPM(MotorsReq &, MotorsRes &);
-    bool getMotorNames(MotorsReq &, MotorsRes &);
+
 private:
     std::unique_ptr<serial::Serial> connection = nullptr;
-    std::map<std::string, uint8_t> motor_names_to_number;
     std::string write(const std::string & out, bool ignore_response = true, std::string eol = "\n");
 };
 
@@ -39,15 +38,7 @@ motor_controller::motor_controller(const std::string & port, int baud_rate, int 
     ROS_INFO("Connecting to motor_controller on port: %s", port.c_str());
     connection = std::unique_ptr<serial::Serial>(new serial::Serial(port, (u_int32_t) baud_rate, serial::Timeout::simpleTimeout(timeout)));
 
-    // Setup the motor name lookup dictionary
-    motor_names_to_number["Z_Front_Right"] = 4;
-    motor_names_to_number["Z_Front_Left"] = 3;
-    motor_names_to_number["Z_Back_Right"] = 7;
-    motor_names_to_number["Z_Back_Left"] = 6;
-    motor_names_to_number["X_Right"] = 1;
-    motor_names_to_number["X_Left"] = 8;
-    motor_names_to_number["Y_Front"] = 2;
-    motor_names_to_number["Y_Back"] = 5;
+    peripherals::motor_enums motor_defs;
 }
 
 motor_controller::~motor_controller() {
@@ -68,8 +59,8 @@ std::string motor_controller::write(const std::string & out, bool ignore_respons
 
 bool motor_controller::setMotorPWM(MotorReq &req, MotorRes &res)
 {
-    int16_t pwm = req.motor_in.pwm;
-    std::string out = "M" + std::to_string(motor_names_to_number[req.motor_in.name]);
+    int16_t pwm = req.pwm;
+    std::string out = "M" + std::to_string(req.motor_num);
     std::string dir = "F";
     if(pwm < 0) {
         dir = "R";
@@ -78,41 +69,40 @@ bool motor_controller::setMotorPWM(MotorReq &req, MotorRes &res)
     if(pwm > MAX_MOTOR_VALUE) {
         pwm = MAX_MOTOR_VALUE;
     }
-    out += dir + std::to_string(pwm);
+    out += dir;
+    out += std::to_string((pwm/100) + '0');
+    out += std::to_string(((pwm%100)/10) + '0');
+    out += std::to_string((pwm%10) + '0');
     this->write(out);
-    res.motor_out.name = req.motor_in.name;
-    res.motor_out.pwm = pwm * ((dir == "F") ? 1 : -1);
     return true;
 }
 
 bool motor_controller::setAllMotorsPWM(MotorsReq &req, MotorsRes &res)
 {
+    char motor_num = '1';
     std::string out = "MSA";
-    char* motor_pwms = new char[req.motors_in.size() * (NUM_CHAR_PER_PWM + NUM_CHAR_PER_DIR) + 1];
-    motor_pwms[req.motors_in.size() * (NUM_CHAR_PER_PWM + NUM_CHAR_PER_DIR)] = '\0';
-    for (auto motor : req.motors_in) {
+    for (auto pwm : req.pwms) {
         char dir = 'F';
-        if (motor.pwm < 0) {
+        if (pwm < 0) {
             dir = 'R';
-            motor.pwm *= -1;
+            pwm *= -1;
         }
-        if (motor.pwm > MAX_MOTOR_VALUE) {
-            motor.pwm = MAX_MOTOR_VALUE;
+        if (pwm > MAX_MOTOR_VALUE) {
+            pwm = MAX_MOTOR_VALUE;
         }
-        uint8_t index = motor_names_to_number[motor.name];
-        motor_pwms[(index - 1) * (NUM_CHAR_PER_PWM + NUM_CHAR_PER_DIR)] = dir;
-        std::strncpy(&(motor_pwms[1 + (index -1) * (NUM_CHAR_PER_PWM + NUM_CHAR_PER_DIR)]),
-            std::to_string(motor.pwm).c_str(), NUM_CHAR_PER_PWM);
+        out.push_back(dir); 
+        out.push_back(((char)(pwm/100) + '0'));
+        out.push_back(((char)((pwm%100)/10) + '0'));
+        out.push_back(((char)(pwm%10) + '0'));
+	motor_num++;
     }
-    out += std::string(motor_pwms);
     this->write(out);
-    delete[] motor_pwms;
     return true;
 }
 
 bool motor_controller::stopMotor(MotorReq &req, MotorRes &res)
 {
-    std::string out = "SM" + std::to_string(motor_names_to_number[req.motor_in.name]);
+    std::string out = "SM" + std::to_string(req.motor_num);
     this->write(out);
     return true;
 }
@@ -131,30 +121,10 @@ bool motor_controller::getRPM(MotorsReq &req, MotorsRes &res)
         return false;
     }
 
-    std::map<std::string, uint8_t>::iterator it;
-    for(it = motor_names_to_number.begin(); it != motor_names_to_number.end(); it++) {
-        std::string rpm_i = rpm_string.substr((it->second - 1)*2, 2);
-        peripherals::motor_info motor_i;
-
-        // Get RPM for this motor
-        motor_i.name = it->first;
-        motor_i.rpm = (int16_t)((rpm_i[1] << 8) | (rpm_i[0]));
-
-        // Add RPM to response
-        res.motors_out.push_back(motor_i);
+    for(uint8_t motor = 0; motor < NUM_MOTORS; motor++){
+	res.rpms.push_back((int16_t)((rpm_string[(motor * 2) + 1] << 8) | (rpm_string[motor * 2])));
     }
-
     return true;
-}
-
-bool motor_controller::getMotorNames(MotorsReq &req, MotorsRes &res)
-{
-    std::map<std::string, uint8_t>::iterator it;
-    for(it = motor_names_to_number.begin(); it != motor_names_to_number.end(); it++) {
-        peripherals::motor_info motor_i;
-        motor_i.name = it->first;
-        res.motors_out.push_back(motor_i);
-    }
 }
 
 int main(int argc, char ** argv)
@@ -180,7 +150,6 @@ int main(int argc, char ** argv)
     rosserv stp = nh.advertiseService("stopAllMotors", &motor_controller::stopAllMotors, &m);
     rosserv sm  = nh.advertiseService("stopMotor", &motor_controller::stopMotor, &m);
     rosserv rpm = nh.advertiseService("getRPM", &motor_controller::getRPM, &m);
-    rosserv nms = nh.advertiseService("getMotorNames", &motor_controller::getMotorNames, &m);
     rosserv sam = nh.advertiseService("setAllMotorsPWM", &motor_controller::setAllMotorsPWM, &m);
 
     /* Wait for callbacks */

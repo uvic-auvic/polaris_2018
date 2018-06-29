@@ -1,0 +1,14 @@
+<launch>
+    <arg name="loop_rate" default="10"/>
+    <arg name="Kp" default="0.01"/>
+    <arg name="Ki" default="0.001"/>
+    <arg name="Kd" default="0.0"/>
+
+    <node name="depth_control" pkg="navigation" type="depth_control">
+        <param name="loop_rate" value="$(arg loop_rate)"/>
+        <param name="Kp" value="$(arg Kp)"/>
+        <param name="Ki" value="$(arg Ki)"/>
+        <param name="Kd" value="$(arg Kd)"/>
+    </node>
+
+</launch>

@@ -1,10 +1,10 @@
 ros = new ROSLIB.Ros();
-ros.connect("ws://localhost:9090");
+ros.connect("ws://"+ window.location.hostname + ":9090");
 
 function get_topic_success(message){ 
     $("#main-video-selector").append("<option id='' selected> None </option>");
     for(i=0; i < message.length; i++){
-        $("#main-video-selector").append("<option id='http://localhost:8080/stream?topic=" + message[i] + "&type=ros_compressed' >" + message[i] + "</option>");
+        $("#main-video-selector").append("<option id='http://" + window.location.hostname + ":8080/stream?topic=" + message[i] + "&type=ros_compressed' >" + message[i] + "</option>");
     }
 
     /*

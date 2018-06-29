@@ -40,8 +40,9 @@ catkin_package(
 
 
 include_directories(
-# include
+  include 
   ${catkin_INCLUDE_DIRS}
+  
 )
 
 add_executable(rov src/rov.cpp)
@@ -51,6 +52,7 @@ add_dependencies(rov navigation_generate_messages_cpp peripherals_generate_messa
 add_executable(thrustmap src/thrustmap.cpp)
 target_link_libraries(thrustmap ${catkin_LIBRARIES})
 add_dependencies(thrustmap navigation_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
+
 
 add_executable(control_system src/control_system.cpp src/controllers.cpp src/controllers.hpp src/pid.cpp src/pid.h)
 target_link_libraries(control_system ${catkin_LIBRARIES})

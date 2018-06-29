@@ -4,6 +4,7 @@
 #include "navigation/joystick.h"
 #include "navigation/keyboard.h"
 #include "navigation/nav_request.h"
+#include "navigation/nav.h"
 
 #define DEPTH_DELTA (0.02)
 #define MAX_DEPTH (100)
@@ -28,7 +29,7 @@ private:
 
 rov_mapper::rov_mapper(double max_speed_ms, double yaw_rate_degs) 
     :   nh(ros::NodeHandle("~")),
-        nav_pub(nh.advertise<navigation::nav_request>("/nav/navigation", 5)),
+        nav_pub(nh.advertise<navigation::nav>("/nav/navigation", 5)),
         W_pressed(false),
         A_pressed(false),
         S_pressed(false),
@@ -43,6 +44,7 @@ void rov_mapper::recieve_joystick(const navigation::joystick::ConstPtr& msg) {
     bool up_pressed = msg->buttons[1];
     bool down_pressed = msg->buttons[2];
 
+    /*
     // Set default values
     navigation::nav_request nav_msg;
     nav_msg.depth = depth;
@@ -101,9 +103,17 @@ void rov_mapper::recieve_joystick(const navigation::joystick::ConstPtr& msg) {
         nav_msg.yaw_rate = -yaw_rate_degs; // degrees per second
         nav_pub.publish(nav_msg);
         return;
-    }
+    }*/
 
     // set motor to stop
+
+    navigation::nav nav;
+
+    nav.direction.x = (-1 * msg->axes[1]) / 100.0;
+    nav.direction.y = (-1 * msg->axes[0]) / 100.0;
+    nav.direction.z = (-1 * msg->axes[2]) / 100.0;
+
+    nav_pub.publish(nav);
 
 }
 

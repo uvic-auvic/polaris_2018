@@ -28,7 +28,7 @@ add_message_files(
   powerboard.msg
   imu.msg
   orientation.msg
-  motor_info.msg
+  motor_enums.msg
   hydro.msg
 )
 

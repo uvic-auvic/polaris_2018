@@ -1,3 +1,4 @@
-peripherals/motor_info motor_in
+uint8 motor_num
+int16 pwm
 ---
-peripherals/motor_info motor_out
+int16 rpm
