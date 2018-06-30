@@ -1,17 +1,22 @@
 <launch>
     <arg name="record" default="false"/>
     <arg name="save_location" default="$(env HOME)/rosbag/auvic"/>
+    <arg name="only_compressed_regex" value="-e &quot;(^\/video(.*)compressed$)|(^(?!\/video).*$)&quot;"/>
 
-    <include file="$(find vision)/launchfiles/camera.launch"/>
     <include file="$(find webgui)/webgui.launch"/>
+    <include file="$(find vision)/launchfiles/camera.launch"/>
     <include file="$(find monitor)/launchfiles/serial.launch"/>
     <include file="$(find peripherals)/launchfiles/power_board.launch"/>
     <include file="$(find peripherals)/launchfiles/imu.launch"/>
     <include file="$(find peripherals)/launchfiles/motors.launch"/>
     <node name="rov" pkg="navigation" type="rov"/>
     <node name="thrustmap" pkg="navigation" type="thrustmap"/>
-
+    
+    <!--include file="$(find vision)/launchfiles/classifier.launch"/-->
+    <!--include file="$(find vision)/launchfiles/sonia_bag.launch">
+        <arg name="loc" value="/home/asinha/Documents/buoys/buoys-14h48-1.bag"/>
+    </include-->
     <group if="$(arg record)">
-        <node name="rosbag" pkg="rosbag" type="record"  args="-a -o $(arg save_location)"/> 
+        <node name="rosbag" pkg="rosbag" type="record"  args="-o $(arg save_location) $(arg only_compressed_regex)"/> 
     </group> 
 </launch>

@@ -1,19 +1,22 @@
-## ROS Ignores
+# ROS Ignores
 ros/build
 ros/devel
 ros/src/CMakeLists.txt
 ros/src/CMakeLists.txt.*
 
-#Other CMake projects
+# Other CMake projects
 ros/src/gscam
 
-## Python
+# Python
 *.pyo
 *.pyc
 
-## Misc things
+# Misc things
 */*~
 ros/.catkin_workspace
 .vscode
 ros/test.launch
 **/.vsocde
+
+# TensorFlow
+ros/src/vision/scripts/tf

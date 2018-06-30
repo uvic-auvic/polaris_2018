@@ -1,4 +1,4 @@
-<launch>       
+<launch>    
     <node name="reciever" pkg="vision" type="reciever" required="true">
         <param name="name" value="top_face_cam"/>
     </node>

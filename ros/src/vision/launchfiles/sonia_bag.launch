@@ -1,9 +1,9 @@
 <launch>
-    <arg name="bag_location"/>
-    <arg name="node_name"/>
-    <arg name="topic" />
-    <arg name="message"/>
+    <arg name="node_name" default="sonia_rosbag"/>
+    <arg name="topic" default="/provider_vision/Front_GigE"/>
+    <arg name="message" default="/video/top_face_cam"/>
+    <arg name="loc"/>
     
-    <node pkg="rosbag" type="play" name="$(arg node_name)" output="screen" args="-l -q $(arg bag_location)"/>
-    <node name="$(arg node_name)_republish" type="republish" pkg="image_transport" output="screen" args="compressed in:=$(arg topic) out:=$(arg message)" />
+    <node name="$(arg node_name)" pkg="rosbag" type="play"  output="screen" args="-l -q $(arg loc)"/>
+    <node name="$(arg node_name)_republish" type="republish" pkg="image_transport" output="screen" args="compressed in:=$(arg topic) out:=$(arg message)"/>
 </launch>
