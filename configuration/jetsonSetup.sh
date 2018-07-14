@@ -4,10 +4,11 @@
 # It just contains the easiest to install packages which are required
 # Anything CUDA related or NVIDIA related should be done using JetPack
 
-dev libgstreamer-plugins-good1.0-dev
-cd ../ros/src
+sudo apt-get install -y gstreamer1.0-tools libgstreamer1.0-dev libgstreamer-plugins-good1.0-dev libgstreamer-plugins-base1.0-dev
+./common-packages.sh
+pushd ../ros/src
 git clone https://github.com/ros-drivers/gscam
 sudo apt-get install -y x11vnc
-./common-packages.sh
+popd
 
 echo "Add '-DGSTREAMER_VERSION_1_x=0n' to the EXTRA_CMAKE_FLAGS in the gscam package"
