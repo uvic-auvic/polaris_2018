@@ -12,4 +12,4 @@ git clone https://github.com/ros-drivers/gscam
 sudo apt-get install -y x11vnc
 popd
 
-echo "Add '-DGSTREAMER_VERSION_1_x=0n' to the EXTRA_CMAKE_FLAGS in the gscam package"
+echo "Add '-DGSTREAMER_VERSION_1_x=On' to the EXTRA_CMAKE_FLAGS in the gscam package"
