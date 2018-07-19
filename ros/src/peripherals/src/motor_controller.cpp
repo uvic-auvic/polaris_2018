@@ -2,10 +2,11 @@
 #include <string>
 #include <memory>
 #include <serial/serial.h>
+#include "monitor/GetSerialDevice.h"
 #include "peripherals/motor.h"
 #include "peripherals/motors.h"
-#include "monitor/GetSerialDevice.h"
 #include "peripherals/motor_enums.h"
+#include "peripherals/rpms.h"
 
 #define NUM_MOTORS (8)
 #define NUM_CHAR_PER_RPM (2)
@@ -27,7 +28,7 @@ public:
     bool setAllMotorsPWM(MotorsReq &req, MotorsRes &res);
     bool stopMotor(MotorReq &req, MotorRes &res);
     bool stopAllMotors(MotorReq &, MotorRes &);
-    bool getRPM(MotorsReq &, MotorsRes &);
+    bool getRPM(peripherals::rpms &rpms_msg);
 
 private:
     std::unique_ptr<serial::Serial> connection = nullptr;
@@ -113,16 +114,15 @@ bool motor_controller::stopAllMotors(MotorReq &req, MotorRes &res)
     return true;
 }
 
-bool motor_controller::getRPM(MotorsReq &req, MotorsRes &res)
+bool motor_controller::getRPM(peripherals::rpms &rpms_msg)
 {
     std::string rpm_string = this->write("RVA", false);
-    ROS_INFO("Got: \"%s\"", rpm_string.c_str());
     if (rpm_string.size() != (NUM_CHAR_PER_PWM * NUM_MOTORS) + 2) { //assuming eol is \r\n
         return false;
     }
 
     for(uint8_t motor = 0; motor < NUM_MOTORS; motor++){
-	res.rpms.push_back((int16_t)((rpm_string[(motor * 2) + 1] << 8) | (rpm_string[motor * 2])));
+	rpms_msg.rpms.push_back((double)( (uint16_t)((rpm_string[(motor * 2) + 1] << 8) | (rpm_string[motor * 2])) ));
     }
     return true;
 }
@@ -145,15 +145,25 @@ int main(int argc, char ** argv)
 
     motor_controller m(srv.response.device_fd);
 
+    ros::Publisher rpm_pub = nh.advertise<peripherals::rpms>("MotorsRPMs", 1);
+
     /* Setup all the Different services/commands which we  can call. Each service does its own error handling */
     rosserv mr  = nh.advertiseService("setMotorPWM", &motor_controller::setMotorPWM, &m);
     rosserv stp = nh.advertiseService("stopAllMotors", &motor_controller::stopAllMotors, &m);
     rosserv sm  = nh.advertiseService("stopMotor", &motor_controller::stopMotor, &m);
-    rosserv rpm = nh.advertiseService("getRPM", &motor_controller::getRPM, &m);
     rosserv sam = nh.advertiseService("setAllMotorsPWM", &motor_controller::setAllMotorsPWM, &m);
 
-    /* Wait for callbacks */
-    ros::spin();
+    ros::Rate r(1);
+    while(ros::ok())
+    {
+        // Publish the RPMS to a topic
+        peripherals::rpms rpms_msg;
+        m.getRPM(rpms_msg);
+        rpm_pub.publish(rpms_msg);
+
+        ros::spinOnce();
+        r.sleep();
+    }
 
     return 0;
 }

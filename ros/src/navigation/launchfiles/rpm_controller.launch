@@ -1,0 +1,19 @@
+<launch>
+    <!-- General Control System Parameters -->
+    <arg name="loop_rate" default="1.0"/>
+    <arg name="min_rpm" default="0.0"/>
+    <arg name="max_rpm" default="5000.0"/>
+    <arg name="Kp" default="0.1"/>
+    <arg name="Ki" default="0.4"/>
+    <arg name="motor_count" default="8"/>
+    
+    <node name ="rpm_controller" pkg="navigation" type="rpm_controller" required="true">
+        <param name="loop_rate" value="$(arg loop_rate)"/>
+        <param name="min_rpm" value="$(arg min_rpm)"/>
+        <param name="max_rpm" value="$(arg max_rpm)"/>
+        <param name="Kp" value="$(arg Kp)"/>
+        <param name="Ki" value="$(arg Ki)"/>
+        <param name="motor_count" value="$(arg motor_count)"/>
+    </node>
+
+</launch>

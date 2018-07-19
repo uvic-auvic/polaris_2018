@@ -36,7 +36,7 @@ device_manager::device_manager(const std::vector<device_property> & properties) 
             bool device_found = false;
             if (property->convert_to_bytes) {
                 // Send initial message as defined in JSON
-                uint64_t ack_message = std::stoul(property->ack_message, 0, 16);
+                uint64_t ack_message = (uint64_t)(std::stoull(property->ack_message, 0, 16) & 0xFFFFFFFFFFFFFFFF);
                 uint8_t * send_data = new uint8_t[property->size_of_message];
                 for (int i = 0; i < property->size_of_message; ++i) {
                     int j = i;
@@ -62,7 +62,7 @@ device_manager::device_manager(const std::vector<device_property> & properties) 
                 }
 
                 // Compare expected with actual reponse
-                uint64_t expected_response = std::stoul(property->ack_response, 0 ,16);
+                uint64_t expected_response = (uint64_t)(std::stoull(property->ack_response, 0, 16) & 0xFFFFFFFFFFFFFFFF);
                 device_found = expected_response == response;
                 delete [] response_array;
                 delete [] send_data; 

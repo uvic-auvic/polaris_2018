@@ -1,15 +1,15 @@
 var imu_reset = new ROSLIB.Service({
     ros : ros,
-    name : '/power_board/PowerEnable',
-    messageType : '/peripherals/power_enable'
+    name : '/imu/set_velocity',
+    messageType : '/peripherals/set_vel'
 });
 
 $("#imu_reset").click(function(){
     var request = new ROSLIB.ServiceRequest({
-        vector:{
-            x:0,
-            y:0,
-            z:0
+        velocity:{
+            x:0.0,
+            y:0.0,
+            z:0.0
         }
     });
 

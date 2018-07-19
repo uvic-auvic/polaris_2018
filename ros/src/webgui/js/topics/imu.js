@@ -34,9 +34,9 @@ var imu = new ROSLIB.Topic({
     $('#velocity_y').text(message.velocity.y);
     $('#velocity_z').text(message.velocity.z);
 
-    $('#euler_angles_x').text(message.euler_angles.x);
-    $('#euler_angles_y').text(message.euler_angles.y);
-    $('#euler_angles_z').text(message.euler_angles.z);
+    $('#euler_angles_x').text(message.euler_angles.roll);
+    $('#euler_angles_y').text(message.euler_angles.pitch);
+    $('#euler_angles_z').text(message.euler_angles.yaw);
 
-    $('#pb_internal_pressure').text(Math.round(message.temperature));
+    $('#imu_temp').text(Math.round(message.temperature));
   });

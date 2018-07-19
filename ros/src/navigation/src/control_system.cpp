@@ -1,6 +1,7 @@
 #include <ros/ros.h>
 #include "navigation/nav.h"
 #include "navigation/nav_request.h"
+#include "navigation/control_en.h"
 #include "peripherals/imu.h"
 #include "peripherals/powerboard.h"
 #include "peripherals/avg_data.h"
@@ -11,6 +12,8 @@
 
 using AvgDataReq = peripherals::avg_data::Request;
 using AvgDataRes = peripherals::avg_data::Response;
+using ControlEnReq = navigation::control_en::Request;
+using ControlEnRes = navigation::control_en::Response;
 
 class control_system
 {
@@ -22,6 +25,7 @@ public:
     void receive_powerboard_data(const peripherals::powerboard::ConstPtr &msg);
     void compute_output_vectors(navigation::nav &msg);
     bool calibrate_surface_depth(AvgDataReq &req, AvgDataRes &res);
+    bool control_enable_service(ControlEnReq &req, ControlEnRes &res);
 private:
     // ROS
     ros::NodeHandle nh;
@@ -39,6 +43,10 @@ private:
     peripherals::imu::ConstPtr imu_data;
     double current_depth;
     double surface_pressure;
+    bool depth_calibrated;
+
+    // Enables
+    ControlEnReq control_enables;
 };
 
 control_system::control_system():
@@ -46,12 +54,16 @@ control_system::control_system():
     current_request(boost::shared_ptr<navigation::nav_request>(new navigation::nav_request())),
     imu_data(boost::shared_ptr<peripherals::imu>(new peripherals::imu())),
     current_depth(0),
-    surface_pressure(ATMOSPHERIC_PRESSURE)
+    surface_pressure(ATMOSPHERIC_PRESSURE),
+    depth_calibrated(false)
 {
+    control_enables.vel_x_enable = control_enables.vel_y_enable = control_enables.vel_z_enable = true;
+    control_enables.pitch_enable = control_enables.roll_enable = control_enables.yaw_enable = true;
+
     // General Control System Parameters
-    double loop_rate, min_lin_vel, max_lin_vel, min_lin_pos, max_lin_pos;
+    double dt, min_lin_vel, max_lin_vel, min_lin_pos, max_lin_pos;
     double min_angl_vel, max_angl_vel, min_angl_pos, max_angl_pos;
-    nh.getParam("loop_rate", loop_rate);
+    nh.getParam("dt", dt);
     nh.getParam("min_linear_vel", min_lin_vel);
     nh.getParam("max_linear_vel", max_lin_vel);
     nh.getParam("min_linear_pos", min_lin_pos);
@@ -96,8 +108,6 @@ control_system::control_system():
     double Kp_vel_yw, Ki_vel_yw;
     nh.getParam("Kp_vel_yw", Kp_vel_yw);
     nh.getParam("Ki_vel_yw", Ki_vel_yw);
-
-    double dt = 1.0 / loop_rate;
 
     linear_vel_x = new velocity_controller(min_lin_vel, max_lin_vel, dt, Kp_vel_x, Ki_vel_x);
     linear_vel_y = new velocity_controller(min_lin_vel, max_lin_vel, dt, Kp_vel_y, Ki_vel_y);
@@ -154,17 +164,49 @@ bool control_system::calibrate_surface_depth(AvgDataReq &req, AvgDataRes &res)
 
     // Update surface pressure with the average external pressure
     surface_pressure = srv.response.avg_data;
+    depth_calibrated = true;
     return true;
 }
     
+bool control_system::control_enable_service(ControlEnReq &req, ControlEnRes &res)
+{       
+    this->control_enables = req;
+    return true;
+}
+
 void control_system::compute_output_vectors(navigation::nav &msg)
 {       
-    msg.direction.x = linear_vel_x->calculate(current_request->forwards_velocity, imu_data->velocity.x);
-    msg.direction.y = linear_vel_y->calculate(current_request->sideways_velocity, imu_data->velocity.y);
-    msg.direction.z = linear_pos_z->calculate(current_request->depth, current_depth, imu_data->velocity.z);
-    msg.orientation.pitch = angular_pos_p->calculate(0, imu_data->euler_angles.pitch, imu_data->compensated_angular_rate.y);
-    msg.orientation.roll = angular_pos_r->calculate(0, imu_data->euler_angles.roll, imu_data->compensated_angular_rate.x);
-    msg.orientation.yaw = angular_vel_yw->calculate(current_request->yaw_rate, imu_data->compensated_angular_rate.z);
+    if(depth_calibrated)
+    {
+        if(control_enables.vel_x_enable)
+        {
+            msg.direction.x = linear_vel_x->calculate(current_request->forwards_velocity, imu_data->velocity.x);
+        }
+        if(control_enables.vel_y_enable)
+        {
+            msg.direction.y = linear_vel_y->calculate(current_request->sideways_velocity, imu_data->velocity.y);
+        }
+        if(control_enables.vel_z_enable)
+        {
+            msg.direction.z = linear_pos_z->calculate(current_request->depth, current_depth, imu_data->velocity.z);
+        }
+        if(control_enables.pitch_enable)
+        {
+            msg.orientation.pitch = angular_pos_p->calculate(0, imu_data->euler_angles.pitch, imu_data->compensated_angular_rate.y);
+        }
+        if(control_enables.roll_enable)
+        {
+            msg.orientation.roll = angular_pos_r->calculate(0, imu_data->euler_angles.roll, imu_data->compensated_angular_rate.x);
+        }
+        if(control_enables.yaw_enable)
+        {
+            msg.orientation.yaw = angular_vel_yw->calculate(current_request->yaw_rate, imu_data->compensated_angular_rate.z);
+        }
+    }
+    else
+    {
+        ROS_INFO("Please calibrate depth sensor.");
+    }
 }
 
 int main(int argc, char ** argv)
@@ -174,12 +216,14 @@ int main(int argc, char ** argv)
 
     double loop_rate, max_lin_vel;
     nh.getParam("loop_rate", loop_rate);
-    nh.getParam("max_linear_vel", max_lin_vel);
 
     control_system ctrl;
 
     ros::ServiceServer calib_depth = nh.advertiseService
         ("/nav/CalibrateSurfaceDepth", &control_system::calibrate_surface_depth, &ctrl);
+
+    ros::ServiceServer ctrl_en = nh.advertiseService
+        ("ControlSysEnable", &control_system::control_enable_service, &ctrl);
 
     ros::Publisher pub_vectors = nh.advertise<navigation::nav>("/nav/velocity_vectors", 1);
 
@@ -198,10 +242,7 @@ int main(int argc, char ** argv)
         navigation::nav output_vectors;
         ctrl.compute_output_vectors(output_vectors);
 
-        // Normalize the vectors
-        output_vectors.direction.x /= max_lin_vel;
-        output_vectors.direction.y /= max_lin_vel;
-        output_vectors.direction.z /= max_lin_vel;
+        // Publish the vectors
         pub_vectors.publish(output_vectors);
 
         ros::spinOnce();

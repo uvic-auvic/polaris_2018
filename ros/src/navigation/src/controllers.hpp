@@ -14,6 +14,10 @@ private:
     PID* position_pi;
     PID* position_derivator;
     PID* velocity_pi;
+
+    double velocity_desired;
+    double max_pos;
+    double min_pos;
 };
 
 class velocity_controller

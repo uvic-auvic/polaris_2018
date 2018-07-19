@@ -15,7 +15,7 @@ $("#system_settings").click(function(){
         motor_pwr_enable:motor_pwr_enable,
         rail_5V_pwr_enable:rail_5V_pwr_enable,
         rail_12V_9V_pwr_enable:rail_12V_9V_pwr_enable,
-        parallel_batteries_enable:parallel_batteries_enable,
+        parallel_batteries_enable:parallel_batteries_enable
     });
 
     mc.callService(request);

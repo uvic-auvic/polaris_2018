@@ -239,7 +239,7 @@
               <tr>
                 <td>Motor Controller Power</td>
                 <td>
-                    <input id="pb_mc_power" type="checkbox" value="">
+                    <input id="pb_mc_power" type="checkbox" value="" checked>
                 </td>
               </tr>
               <tr>
@@ -251,26 +251,82 @@
               <tr>
                 <td>External 5V Power</td>
                 <td>
-                  <input id="pb_5v" type="checkbox" value="">
+                  <input id="pb_5v" type="checkbox" value="" checked>
                 </td>
               </tr>
               <tr>
                 <td>External 9V and 12V Power</td>
                 <td>
-                  <input id="pb9_12_v" type="checkbox" value="">
+                  <input id="pb9_12_v" type="checkbox" value="" checked>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+    
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                  <th class="ros_topic_title"><h4>Control System</h4></th>
+                </tr>
+              </thead>
+            <tbody id="control_system_settings">
+              <tr>
+                <td>Velocity X Enable</td>
+                <td>
+                    <input id="vel_x_enable" type="checkbox" value="" checked>
+                </td>
+              </tr>
+              <tr>
+                <td>Velocity Y Enable</td>
+                <td>
+                  <input id="vel_y_enable" type="checkbox" value="" checked>
+                </td>
+              </tr>
+              <tr>
+                <td>Velocity X Enable</td>
+                <td>
+                  <input id="vel_z_enable" type="checkbox" value="" checked>
+                </td>
+              </tr>
+              <tr>
+                <td>Pitch Enable</td>
+                <td>
+                  <input id="pitch_enable" type="checkbox" value="" checked>
+                </td>
+              </tr>
+              <tr>
+                <td>Roll Enable</td>
+                <td>
+                  <input id="roll_enable" type="checkbox" value="" checked>
+                </td>
+              </tr>
+              <tr>
+                <td>Yaw Enable</td>
+                <td>
+                  <input id="yaw_enable" type="checkbox" value="" checked>
                 </td>
               </tr>
             </tbody>
           </table>
           <table class="table table-hover">
-          <thead>
+            <thead>
               <tr>
                 <th class="ros_topic_title"><h4>IMU</h4></th>
               </tr>
             </thead>
           </table>
-          <button>
+          <button id="imu_reset">
             Reset IMU Vector
+          </button>
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th class="ros_topic_title"><h4>Depth Sensor</h4></th>
+              </tr>
+            </thead>
+          </table>
+          <button id="depth_calibrate">
+            Calibrate Surface Pressure
           </button>
       </div>
 
@@ -282,6 +338,9 @@
 </body>
 
 <script src="js/services/power_board_services.js" type="text/javascript" type="text/javascript"></script>
+<script src="js/services/imu_vector_reset.js" type="text/javascript" type="text/javascript"></script>
+<script src="js/services/calibrate_depth.js" type="text/javascript" type="text/javascript"></script>
+<script src="js/services/control_system_enable.js" type="text/javascript" type="text/javascript"></script>
 <script src="js/topics/nav.js" type="text/javascript" type="text/javascript"></script>
 
 </html>

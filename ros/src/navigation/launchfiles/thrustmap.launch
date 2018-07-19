@@ -1,0 +1,10 @@
+<launch>
+    <arg name="max_linear_vel" default="5.0"/>
+    <arg name="max_angular_vel" default="180.0"/>
+
+    <node name ="thrustmap" pkg="navigation" type="thrustmap" required="true">
+        <param name="max_linear_vel" value="$(arg max_linear_vel)"/>
+        <param name="max_angular_vel" value="$(arg max_angular_vel)"/>
+    </node>
+
+</launch>

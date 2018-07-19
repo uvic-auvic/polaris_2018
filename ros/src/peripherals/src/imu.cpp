@@ -4,9 +4,11 @@
 #include <serial/serial.h>
 #include <iostream>
 
+#include "fir_filter.hpp"
 #include "monitor/GetSerialDevice.h"
 #include "peripherals/imu.h"
 #include "peripherals/orientation.h"
+#include "peripherals/set_vel.h"
 #include "geometry_msgs/Vector3.h"
 
 #define RESPONSE_MAX_SIZE (23)
@@ -30,6 +32,8 @@
 #define MAG_ACCEL_GYRO_SIZE     (23)
 
 using rosserv = ros::ServiceServer;
+using VelSetReq = peripherals::set_vel::Request;
+using VelSetRes = peripherals::set_vel::Response;
 using imu_msg = peripherals::imu;
 
 class imu{
@@ -43,10 +47,19 @@ public:
     bool get_mag_accel_gyro(geometry_msgs::Vector3 &mag, geometry_msgs::Vector3 &accel, 
             geometry_msgs::Vector3 &gyro, double &time);
     void get_velocity(geometry_msgs::Vector3 &velocity_vector);
+    bool set_velocity(VelSetReq &req, VelSetRes &res);
     void update_velocity();
 private:
     void write(uint8_t command, int response_bytes = 0);
     bool verify_response(int response_bytes);
+
+    ros::NodeHandle nh;
+    std::unique_ptr<fir_filter> accel_x_filter;
+    std::unique_ptr<fir_filter> accel_y_filter;
+    std::unique_ptr<fir_filter> accel_z_filter;
+    std::unique_ptr<fir_filter> dvel_x_filter;
+    std::unique_ptr<fir_filter> dvel_y_filter;
+    std::unique_ptr<fir_filter> dvel_z_filter;
     std::unique_ptr<serial::Serial> connection = nullptr;
     uint8_t * response_buffer = nullptr;
     double mag_gain_scale = 1;
@@ -57,7 +70,9 @@ private:
     double last_timestamp;
 };
 
-imu::imu(const std::string & port, int baud_rate, int timeout) {
+imu::imu(const std::string & port, int baud_rate, int timeout) :
+    nh(ros::NodeHandle("~"))
+{
     velocity.x = 0.0;
     velocity.y = 0.0;
     velocity.z = 0.0;
@@ -65,6 +80,25 @@ imu::imu(const std::string & port, int baud_rate, int timeout) {
     last_accel.y = 0.0;
     last_accel.z = 0.0;
     last_timestamp = 0.0;
+
+    // HOW TO DESIGN MATLAB FILTER
+    // To create filter output: filter = designfilt('filtertype', 'Param1', Val1, 'Param2', Val2, etc)
+    // To view designfilt output: fvtool(filter)
+    // To save designfilt output: csvwrite('file_name.csv', filter.Coefficients)
+
+    // MATLAB: low_pass_filter = designfilt('lowpassfir', 'FilterOrder', 7, 'CutoffFrequency', 0.5)
+    std::string accel_filter_loc;
+    nh.getParam("accel_filter_loc", accel_filter_loc);
+    accel_x_filter = std::unique_ptr<fir_filter>(new fir_filter(accel_filter_loc));
+    accel_y_filter = std::unique_ptr<fir_filter>(new fir_filter(accel_filter_loc));
+    accel_z_filter = std::unique_ptr<fir_filter>(new fir_filter(accel_filter_loc));
+
+    // MATLAB: highpass_filter = designfilt('highpassfir', 'FilterOrder', 9, 'CutoffFrequency', 0.05)
+    std::string vel_filter_loc;
+    nh.getParam("vel_filter_loc", vel_filter_loc);
+    dvel_x_filter = std::unique_ptr<fir_filter>(new fir_filter(vel_filter_loc));
+    dvel_y_filter = std::unique_ptr<fir_filter>(new fir_filter(vel_filter_loc));
+    dvel_z_filter = std::unique_ptr<fir_filter>(new fir_filter(vel_filter_loc));
 
     ROS_INFO("Connecting to imu on port: %s", port.c_str());
     connection = std::unique_ptr<serial::Serial>(new serial::Serial(port, (u_int32_t) baud_rate, serial::Timeout::simpleTimeout(timeout)));
@@ -200,7 +234,7 @@ bool imu::get_mag_accel_gyro_stable
 
     // Get accelerometer vector (G's)
     accel.x = ((int16_t)((response_buffer[7] << 8) | response_buffer[8])) * accel_gain_scale / 32768000.0;
-    accel.y = ((int16_t)((response_buffer[9] << 8) | response_buffer[10])) * accel_gain_scale / 32768000.0;
+    accel.y = -((int16_t)((response_buffer[9] << 8) | response_buffer[10])) * accel_gain_scale / 32768000.0;
     accel.z = ((int16_t)((response_buffer[11] << 8) | response_buffer[12])) * accel_gain_scale / 32768000.0;
 
     // Get gyroscope vector (rad/sec)
@@ -238,7 +272,7 @@ bool imu::get_mag_accel_gyro
 
     // Get accelerometer vector (G's)
     accel.x = ((int16_t)((response_buffer[7] << 8) | response_buffer[8])) * accel_gain_scale / 32768000.0;
-    accel.y = ((int16_t)((response_buffer[9] << 8) | response_buffer[10])) * accel_gain_scale / 32768000.0;
+    accel.y = -((int16_t)((response_buffer[9] << 8) | response_buffer[10])) * accel_gain_scale / 32768000.0;
     accel.z = ((int16_t)((response_buffer[11] << 8) | response_buffer[12])) * accel_gain_scale / 32768000.0;
 
     // Get gyroscope vector (rad/sec)
@@ -253,7 +287,7 @@ bool imu::get_mag_accel_gyro
 }
 
 void imu::update_velocity()
-{     
+{
     static bool valid_data = false;
     geometry_msgs::Vector3 dummy_v;
     double dummy_d;
@@ -262,14 +296,32 @@ void imu::update_velocity()
     double timestamp;
 
     // Get new readings
-    get_mag_accel_gyro(dummy_v, accel, dummy_v, timestamp);
-    get_mag_accel_gyro_stable(dummy_v, gravity, dummy_v, dummy_d);
+    bool accel_ok = get_mag_accel_gyro(dummy_v, accel, dummy_v, timestamp);
+    bool grav_ok = get_mag_accel_gyro_stable(dummy_v, gravity, dummy_v, dummy_d);
+    if(!(accel_ok && grav_ok))
+    {
+        ROS_ERROR("Invalid message.");
+        return;
+    }
 
-    // Subtract gravity from acceleration to get true acceleration
+    // Subtract gravity from acceleration to get true acceleration, and filter output
     geometry_msgs::Vector3 accel_true;
-    accel_true.x = accel.x - gravity.x;
-    accel_true.y = accel.y - gravity.y;
-    accel_true.z = accel.z - gravity.z;
+    this->accel_x_filter->add_data(accel.x - gravity.x);
+    this->accel_y_filter->add_data(accel.y - gravity.y);
+    this->accel_z_filter->add_data(accel.z - gravity.z);
+    accel_true.x = this->accel_x_filter->get_result();
+    accel_true.y = this->accel_y_filter->get_result();
+    accel_true.z = this->accel_z_filter->get_result();
+
+    if(accel_true.x < 0.01 && accel_true.x > -0.01) {
+        accel_true.x = 0;
+    }
+    if(accel_true.y < 0.01 && accel_true.y > -0.01) {
+        accel_true.y = 0;
+    }
+    if(accel_true.z < 0.01 && accel_true.z > -0.01) {
+        accel_true.z = 0;
+    }
 
     // Check if this is the first time the function was called
     if(!valid_data) {   
@@ -289,10 +341,16 @@ void imu::update_velocity()
         this_time = timestamp;
     }
 
-    // Compute the velocity by integrating the acceleration using trapezoid method of integration
-    velocity.x = velocity.x + 9.8 * 0.5 * (accel_true.x + last_accel.x) * (this_time - last_timestamp) / 1000.0;
-    velocity.y = velocity.y + 9.8 * 0.5 * (accel_true.y + last_accel.y) * (this_time - last_timestamp) / 1000.0;
-    velocity.z = velocity.z + 9.8 * 0.5 * (accel_true.z + last_accel.z) * (this_time - last_timestamp) / 1000.0;
+    // Compute the change in velocity by integrating the acceleration using trapezoid method of integration
+    constexpr double unit_conversion = 9.8 * 0.5 / 1000.0;
+    dvel_x_filter->add_data(unit_conversion * (accel_true.x + last_accel.x) * (this_time - last_timestamp));
+    dvel_y_filter->add_data(unit_conversion * (accel_true.y + last_accel.y) * (this_time - last_timestamp));
+    dvel_z_filter->add_data(unit_conversion * (accel_true.z + last_accel.z) * (this_time - last_timestamp));
+
+    // Filter change in velocity, and add to old velocity to complete integration
+    velocity.x += dvel_x_filter->get_result();
+    velocity.y += dvel_y_filter->get_result();
+    velocity.z += dvel_z_filter->get_result();
 
     // Update accel and timestamp
     last_accel = accel_true;
@@ -301,6 +359,18 @@ void imu::update_velocity()
 
 void imu::get_velocity(geometry_msgs::Vector3 &velocity_vector) {      
     velocity_vector = this->velocity;
+}
+
+bool imu::set_velocity(VelSetReq &req, VelSetRes &res) {
+    this->velocity = req.velocity;
+    this->accel_x_filter->clear_data();
+    this->accel_y_filter->clear_data();
+    this->accel_z_filter->clear_data();
+    this->dvel_x_filter->clear_data();
+    this->dvel_y_filter->clear_data();
+    this->dvel_z_filter->clear_data();
+    res.result_vel = this->velocity;
+    return true;
 }
 
 int main(int argc, char ** argv)
@@ -331,12 +401,16 @@ int main(int argc, char ** argv)
     }
 
     ROS_INFO("Using IMU on fd \"%s\"", srv.response.device_fd.c_str());
+    imu dev(srv.response.device_fd);
+    //imu dev("/dev/ttyUSB0");
+
+    // Declare service calls
+    ros::ServiceServer vel_setter = nh.advertiseService("set_velocity", &imu::set_velocity, &dev);
 
     // Declare publisher
     ros::Publisher pub = nh.advertise<peripherals::imu>(topic_name, topic_buffer_size);
 
     // Update velocity "updates_per_publish" times for every topic publish
-    imu dev(srv.response.device_fd);
     ros::Rate r(publish_rate * updates_per_publish);
     uint16_t count = 0;
     while(ros::ok()) {
@@ -370,7 +444,7 @@ int main(int argc, char ** argv)
                 // Publish message
                 pub.publish(msg);
 
-                ROS_INFO("Temperature: %f", msg.temperature);
+                /*ROS_INFO("Temperature: %f", msg.temperature);
                 ROS_INFO("Velocity: X:%f, Y:%f, Z:%f", msg.velocity.x, msg.velocity.y, msg.velocity.z);
                 ROS_INFO("Euler Angles: P:%f, R:%f, Y:%f", msg.euler_angles.pitch, msg.euler_angles.roll, msg.euler_angles.yaw);
                 ROS_INFO("Stabilised Mag: X:%f, Y:%f, Z:%f", msg.stabilised_magnetic_field.x, msg.stabilised_magnetic_field.y, 
@@ -386,10 +460,10 @@ int main(int argc, char ** argv)
                         msg.acceleration.z);
                 ROS_INFO("Gyro: X:%f, Y:%f, Z:%f", msg.angular_rate.x, msg.angular_rate.y, 
                         msg.angular_rate.z);
-                ROS_INFO("Instantaneous Vector Timestamp: %f\n", msg.instantaneous_vectors_timestamp);
+                ROS_INFO("Instantaneous Vector Timestamp: %f\n", msg.instantaneous_vectors_timestamp);*/
             }
             else {  
-                ROS_ERROR("Invalid message.\n");
+                ROS_ERROR("Invalid message.");
             }
         }
         ros::spinOnce();

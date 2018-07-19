@@ -4,7 +4,10 @@
 /* ------ Position Controller ------ */
 
 position_controller::position_controller(double min_vel, double max_vel, double min_pos, double max_pos,
-        double dt, double Kpp, double Kip, double Kpv, double Kiv)
+        double dt, double Kpp, double Kip, double Kpv, double Kiv):
+    velocity_desired(0),
+    min_pos(min_pos),
+    max_pos(max_pos)
 {
     // Initialize PI controller for position
     this->position_pi = new PID(dt, max_pos, min_pos, Kpp, 0.0, Kip);
@@ -29,7 +32,10 @@ double position_controller::calculate(double position_desired, double position_a
     double position_correction = this->position_pi->calculate(position_desired, position_actual);
 
     // Take derivative of positional correction to get a velocity 
-    double velocity_desired = this->position_derivator->calculate(position_correction, 0);
+    if(position_correction > min_pos && position_correction < max_pos)
+    {
+        velocity_desired = this->position_derivator->calculate(position_correction, 0);
+    }
 
     // Compute a velocity correction
     return this->velocity_pi->calculate(velocity_desired, velocity_actual);

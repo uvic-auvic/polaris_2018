@@ -4,27 +4,43 @@
     <arg name="record" default="false"/>
     <arg name="save_location" default="$(env HOME)/rosbag/auvic"/>
     <arg name="only_compressed_regex" value="-e &quot;(^\/video(.*)compressed$)|(^(?!\/video).*$)&quot;"/>
+    <arg name="max_linear_vel" value="5.0"/>
+    <arg name="max_angular_vel" value="180.0"/>
 
     <!-- Included include files -->
     <include file="$(find webgui)/webgui.launch"/>
-    <include file="$(find vision)/launchfiles/camera.launch">
+    <!--include file="$(find vision)/launchfiles/camera.launch">
+        <arg name="node_name" value="front_camera"/>
+        <arg name="topic_name" value="front_camera"/>
+        <arg name="fps" value="1"/>
         <arg name="fd" value="/dev/video1"/>
-    </include>
+    </include-->
+    <!--include file="$(find vision)/launchfiles/camera.launch">
+        <arg name="node_name" value="bottom_camera"/>
+        <arg name="topic_name" value="bottom_camera"/>
+        <arg name="fps" value="10"/>
+        <arg name="fd" value="/dev/video0"/>
+    </include-->
     <!--include file="$(find vision)/launchfiles/jetson_csi_cam.launch"/-->      
     <include file="$(find monitor)/launchfiles/serial.launch"/>
-    <include file="$(find peripherals)/launchfiles/power_board.launch"/>
-    <include file="$(find peripherals)/launchfiles/imu.launch"/>
-    <include file="$(find peripherals)/launchfiles/motors.launch"/>
+    <!--include file="$(find peripherals)/launchfiles/power_board.launch"/-->
+    <!--include file="$(find peripherals)/launchfiles/imu.launch"/-->
+    <include file="$(find navigation)/launchfiles/rov.launch"/>
+    <include file="$(find navigation)/launchfiles/control_system.launch">
+        <arg name="max_linear_vel" value="$(arg max_linear_vel)"/>
+        <arg name="max_angular_vel" value="$(arg max_angular_vel)"/>
+    </include>
+    <include file="$(find navigation)/launchfiles/thrustmap.launch">
+        <arg name="max_linear_vel" value="$(arg max_linear_vel)"/>
+        <arg name="max_angular_vel" value="$(arg max_angular_vel)"/>
+    </include>
+    <!--include file="$(find peripherals)/launchfiles/motors.launch"/-->
     <!--include file="$(find vision)/launchfiles/classifier.launch"/-->
     <!--include file="$(find vision)/launchfiles/sonia_bag.launch">
         <arg name="loc" value="/home/asinha/Documents/buoys/buoys-14h48-1.bag"/>
     </include-->
 
-    <!-- Nodes that do not need launch files -->
-    <node name="rov" pkg="navigation" type="rov"/>
-    <node name="thrustmap" pkg="navigation" type="thrustmap"/>
-
     <group if="$(arg record)">
-        <node name="rosbag" pkg="rosbag" type="record"  args="-o $(arg save_location) $(arg only_compressed_regex)"/> 
+        <node name="rosbag" pkg="rosbag" type="record"  args="-o $(arg save_location) -a"/> 
     </group> 
 </launch>

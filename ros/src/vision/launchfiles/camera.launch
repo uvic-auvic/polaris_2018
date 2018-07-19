@@ -4,13 +4,13 @@
 
         <arg name="node_name" default="camera_one"/>
         <arg name="topic_name" default="top_face_cam"/>
+        <arg name="fps" default="10"/>
         <arg name="fd" default="/dev/video0"/>
 	
         <node name="$(arg node_name)" pkg="vision" type="sender" required="true">
           <param name="name" value="$(arg topic_name)"/>
+          <param name="fps" value="$(arg fps)"/>
           <param name="fd" value="$(arg fd)"/>
         </node>
-
-	
 
 </launch>

@@ -1,0 +1,7 @@
+bool vel_x_enable
+bool vel_y_enable
+bool vel_z_enable
+bool pitch_enable
+bool roll_enable
+bool yaw_enable
+---

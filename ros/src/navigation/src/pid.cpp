@@ -79,9 +79,15 @@ double PIDImpl::calculate( double setpoint, double pv )
     // Restrict to max/min
     if( output > _max ){
         output = _max; 
+        if(Iout > (_max - Pout - Dout)){
+            _integral = (_max - Pout - Dout) / _Ki;
+        }
     }
     else if( output < _min ){
         output = _min;
+        if(Iout < (_min - Pout - Dout)){
+            _integral = (_min - Pout - Dout) / _Ki;
+        }
     }   
 
     // Save error to previous error

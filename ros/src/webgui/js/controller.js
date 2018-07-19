@@ -49,7 +49,7 @@ function controller_update_loop() {
 
     var gps = navigator.getGamepads();
     for(var c = 0; c < gps.length; gps++){
-      if(gps[c].id == "Logitech WingMan Attack 2 (Vendor: 046d Product: c20d)"){
+      if(gps[c].id.localeCompare("Logitech WingMan Attack 2 (Vendor: 046d Product: c20d)") < 20){
         var info = new ROSLIB.Message(convert_gameController_to_json(gps[c]));
         //console.log(info);
         joystick.publish(info);

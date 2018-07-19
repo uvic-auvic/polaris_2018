@@ -1,5 +1,7 @@
 #include <ros/ros.h>
 #include "navigation/nav.h"
+#include "navigation/thrusts.h"
+#include "peripherals/rpms.h"
 #include "peripherals/motor.h"
 #include "peripherals/motors.h"
 #include "peripherals/motor_enums.h"
@@ -13,6 +15,8 @@
 #define MAX_REVERSE_RPM         (2500.0)
 #define RPM_REVERSE_SQ_COEFF    (0.00000396914500683942)
 #define RPM_SCALE_REVERSE       (MAX_REVERSE_RPM / sqrt(1.0 / RPM_REVERSE_SQ_COEFF))
+
+#define MIN_RPM                 (0)
 
 #define MAX_FORWARD_COMMAND     (400) //37 original
 #define MIN_FORWARD_COMMAND     (100)
@@ -31,7 +35,12 @@
 #define X_LEFT_POS	        (6)
 #define X_RIGHT_POS	        (7)
 
-
+#define VEL_X_MUL               (1.0)
+#define VEL_Y_MUL               (1.0)
+#define VEL_Z_MUL               (1.0)
+#define ROLL_MUL                (-14.0)
+#define PITCH_MUL               (-18.0)
+#define YAW_MUL                 (20.0)
 
 /*
 using MotorReq = peripherals::motor::Request;
@@ -48,13 +57,14 @@ public:
     void do_thrust_matrix(double tau[E_MATRIX_COLUMNS], double thrust_value[]);
 private:
     ros::NodeHandle nh;
-    ros::ServiceClient motor_forward;
-    ros::ServiceClient motor_reverse;
-    ros::ServiceClient setAllMotorsPWM;
-    ros::ServiceClient motor_stop;
-    ros::ServiceClient motors_stop;
+    ros::Publisher thruster_rpms;
 
-    int16_t thrust_to_command(double thrust);
+    double thrust_to_rpm(double thrust);
+
+    double max_angular_rate;
+    double max_linear_rate;
+
+    std::vector<double> rpms;
     
     /*
     Top looking down view:
@@ -82,6 +92,15 @@ private:
 
 }; // end class thrust_controller
 
+thrust_controller::thrust_controller(std::string node_name) :
+    nh(ros::NodeHandle("~")),
+    thruster_rpms(nh.advertise<peripherals::rpms>("/nav/rpms", 1)),
+    rpms(std::vector<double>(Motor_Num))
+{
+    nh.getParam("max_linear_vel", this->max_linear_rate);
+    nh.getParam("max_angular_vel", this->max_angular_rate);
+}
+
 void thrust_controller::do_thrust_matrix(double tau[E_MATRIX_COLUMNS], double thrust_value[Motor_Num]){
     // Thrusters = (E^-1) * tau
     for(int r = 0; r < E_MATRIX_ROWS; r++){
@@ -92,85 +111,56 @@ void thrust_controller::do_thrust_matrix(double tau[E_MATRIX_COLUMNS], double th
     }
 }
 
-int16_t thrust_controller::thrust_to_command(double thrust){
-    //command use to max at 300 now maxes at 100. both cover same range the command = command * 3
-
-    //forward: rpm = 21.74167 (command) - 43.47222
-    //forward: thrust = (x^2) * 0.00000389750967963493  x is rpm, thrust is in newtons
-
-    //reverse: rpm = 31.84857 (command) - 225.50476
-    //reverse: thrust = (x^2) * -0.00000396914500683942  x is rpm, thrust is in newtons
-
-    int command = 0;
+double thrust_controller::thrust_to_rpm(double thrust){
+    //forward: thrust = (rpm^2) * 0.00000389750967963493  -> thrust is in newtons
+    //reverse: thrust = (rpm^2) * -0.00000396914500683942  -> thrust is in newtons
+    
+    double rpm = 0.0;
     if(thrust > 0){
-        
-        unsigned int rpm = sqrt(thrust / RPM_FORWARD_SQ_COEFF);
+        rpm = sqrt(thrust / RPM_FORWARD_SQ_COEFF);
         rpm = RPM_SCALE_FORWARD * rpm;
-        command = (int)((rpm + 43.47222) / 6.522501);
-
-        if(command > MAX_FORWARD_COMMAND){
-            command = MAX_FORWARD_COMMAND;
-        }else if(command < MIN_FORWARD_COMMAND){
-            command = 0;
+        if(rpm < MIN_RPM){
+            rpm = 0;
         }
     }else{
-        unsigned int rpm = sqrt((-thrust) / RPM_REVERSE_SQ_COEFF);
+        rpm = sqrt((-thrust) / RPM_REVERSE_SQ_COEFF);
         rpm = rpm * RPM_SCALE_REVERSE;
-        command = (int)((rpm + 225.50476) / 9.554571);
-        
-        if(command > MAX_REVERSE_COMMAND){
-            command = MAX_REVERSE_COMMAND;
-        }else if(command < MIN_REVERSE_COMMAND){
-            command = 0;
+        if(rpm < MIN_RPM){
+            rpm = 0;
         }
-
-        command = -command;
+        rpm = -rpm;
     }
 
-    return command;
+    return rpm;
 }
-
-thrust_controller::thrust_controller(std::string node_name) :
-    nh(ros::NodeHandle("~")),
-    motor_forward(nh.serviceClient<peripherals::motor>("/" + node_name + "/setMotorForward")),
-    motor_reverse(nh.serviceClient<peripherals::motor>("/" + node_name + "/setMotorReverse")),
-    setAllMotorsPWM(nh.serviceClient<peripherals::motors>("/" + node_name + "/setAllMotorsPWM")),
-    motor_stop(nh.serviceClient<peripherals::motor>("/" + node_name + "/stopMotors")),
-    motors_stop(nh.serviceClient<peripherals::motor>("/" + node_name + "/stopAllMotors"))
-    {
-	
-    }
 
 void thrust_controller::generate_thrust_val(const navigation::nav::ConstPtr &msg)
 {
     double tau[E_MATRIX_COLUMNS] = {
-        msg->direction.x, 
-        msg->direction.y, 
-        msg->direction.z, 
-        msg->orientation.pitch,
-        msg->orientation.roll,
-        msg->orientation.yaw
+        msg->direction.x * VEL_X_MUL / this->max_linear_rate, 
+        msg->direction.y * VEL_Y_MUL / this->max_linear_rate, 
+        msg->direction.z * VEL_Z_MUL / this->max_linear_rate, 
+        msg->orientation.roll * ROLL_MUL / this->max_angular_rate,
+        msg->orientation.pitch * PITCH_MUL / this->max_angular_rate,
+        msg->orientation.yaw * YAW_MUL / this->max_angular_rate
     };   
     double thruster_vals[Motor_Num] = {0.0};
     this->do_thrust_matrix(tau, thruster_vals);
 
-    std::vector<int16_t> pwms(Motor_Num);
+    rpms[peripherals::motor_enums::X_Left - 1] = this->thrust_to_rpm(thruster_vals[X_LEFT_POS]);
+    rpms[peripherals::motor_enums::X_Right - 1] = this->thrust_to_rpm(thruster_vals[X_RIGHT_POS]);
+    rpms[peripherals::motor_enums::Y_Front - 1] = this->thrust_to_rpm(thruster_vals[Y_FRONT_POS]);
+    rpms[peripherals::motor_enums::Y_Back - 1] = this->thrust_to_rpm(thruster_vals[Y_BACK_POS]);
+    rpms[peripherals::motor_enums::Z_Front_Right - 1] = this->thrust_to_rpm(thruster_vals[Z_FRONT_RIGHT_POS]);
+    rpms[peripherals::motor_enums::Z_Front_Left - 1] = this->thrust_to_rpm(thruster_vals[Z_FRONT_LEFT_POS]);
+    rpms[peripherals::motor_enums::Z_Back_Right - 1] = this->thrust_to_rpm(thruster_vals[Z_BACK_RIGHT_POS]);
+    rpms[peripherals::motor_enums::Z_Back_Left - 1] = this->thrust_to_rpm(thruster_vals[Z_BACK_LEFT_POS]);
 
-    pwms[peripherals::motor_enums::X_Left - 1] = this->thrust_to_command(thruster_vals[X_LEFT_POS]);
-    pwms[peripherals::motor_enums::X_Right - 1] = this->thrust_to_command(thruster_vals[X_RIGHT_POS]);
-    pwms[peripherals::motor_enums::Y_Front - 1] = this->thrust_to_command(thruster_vals[Y_FRONT_POS]);
-    pwms[peripherals::motor_enums::Y_Back - 1] = this->thrust_to_command(thruster_vals[Y_BACK_POS]);
-    pwms[peripherals::motor_enums::Z_Front_Right - 1] = this->thrust_to_command(thruster_vals[Z_FRONT_RIGHT_POS]);
-    pwms[peripherals::motor_enums::Z_Front_Left - 1] = this->thrust_to_command(thruster_vals[Z_FRONT_LEFT_POS]);
-    pwms[peripherals::motor_enums::Z_Back_Right - 1] = this->thrust_to_command(thruster_vals[Z_BACK_RIGHT_POS]);
-    pwms[peripherals::motor_enums::Z_Back_Left - 1] = this->thrust_to_command(thruster_vals[Z_BACK_LEFT_POS]);
-    
-    peripherals::motors srv;
-    srv.request.pwms = pwms;
+    peripherals::rpms rpm_msg;
+    rpm_msg.rpms = rpms;
 
-    this->setAllMotorsPWM.call(srv.request, srv.response);
+    this->thruster_rpms.publish(rpm_msg);
 }
-
 
 int main(int argc, char **argv)
 {
@@ -179,7 +169,9 @@ int main(int argc, char **argv)
     ros::NodeHandle nh("~");
     thrust_controller tc("motor_controller");
     ros::Subscriber joy = nh.subscribe<navigation::nav>
-        ("/nav/navigation", 1, &thrust_controller::generate_thrust_val, &tc);
+        ("/nav/velocity_vectors", 1, &thrust_controller::generate_thrust_val, &tc);
+    
     ros::spin();
+
     return 0;
 }

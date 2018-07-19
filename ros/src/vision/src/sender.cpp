@@ -22,21 +22,23 @@ int main (int argc, char ** argv)
     ros::NodeHandle nh("~");
     image_transport::ImageTransport it(nh);
 
-    std::string name, fd, fps_string;
+    std::string name, fd;
+    int fps;
     nh.getParam("name", name);
     nh.getParam("fd", fd);
-    nh.getParam("fps", fps_string);
+    nh.getParam("fps", fps);
 
     std::string publisher_name = "/video/" + name;
     image_transport::Publisher publisher = it.advertise(publisher_name, 5);
+
+    uint8_t video_index = (uint8_t)fd.back();
     
-    cv::VideoCapture source(fd);
+    cv::VideoCapture source(video_index);
     if (!source.isOpened()) {
         ROS_ERROR("%s failed to open device on %s", name.c_str(), fd.c_str());
         return -1;
     }
 
-    int fps = 10;
     ros::Rate loop_rate(fps);
 
     while(nh.ok())
