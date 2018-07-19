@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>AUVIC GUI</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="bootstrap-3.3.7-dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/custom.css">
+  <script src="bootstrap-3.3.7-dist/js/jquery-3.3.1.min.js"></script>
+  <script src="bootstrap-3.3.7-dist/js/bootstrap.min.js"></script>
+  <script type="text/javascript" src="js/libraries/eventemitter2.min.js"></script>
+  <script type="text/javascript" src="js/libraries/roslib.min.js"></script>
+  <script type="text/javascript" type="text/javascript">
+    // Connecting to ROS
+    // -----------------
+  
+    var ros = new ROSLIB.Ros({
+      url : 'ws://' + window.location.hostname + ':9090'
+    });
+	console.log('ws://' + window.location.hostname + ':9090');
+  
+    ros.on('connection', function() {
+      console.log('Connected to websocket server.');
+    });
+  
+    ros.on('error', function(error) {
+      console.log('Error connecting to websocket server: ', error);
+    });
+  
+    ros.on('close', function() {
+      console.log('Connection to websocket server closed.');
+    });
+  
+    // Subscribing to a Topic
+    // ----------------------
+  
+    var depth_node = new ROSLIB.Topic({
+      ros : ros,
+      name : '/depth_sensor_node/depth',
+      messageType : 'peripherals/depth'
+    });
+  
+    depth_node.subscribe(function(message) {
+      //console.log('Received message on ' + depth_node.name + ': ' + message.temperature);
+      $('#depth_sensor_depth').text(message.depth);
+      $('#depth_sensor_temperature').text(message.temperature);
+    });
+
+  </script>
+
+</head>
+<body>
+
+<nav class="navbar navbar-default">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="/index.html">Polaris</a>
+      <a class="navbar-brand" href="/system.html">System</a>
+      <a class="navbar-brand" href="/video.html">Video</a>
+      <a class="navbar-brand" href="/hydrophone.html">Hydrophone</a>
+    </div>
+    <ul class="nav navbar-nav">
+      <!--<li class="active"><a href="#">Home</a></li>-->
+    </ul>
+  </div>
+</nav>
+<div class="container-fluid">
+  <div id="home_view" class="row">
+    <div class="col-lg-12">
+      <h3>Hydrophone Signal</h3>
+      <div id="signal_chart" class="pre-scrollable" style="height: 50%"></div>
+    </div>
+  </div>
+  <div id="home_view" class="row">
+    <div class="col-lg-12">
+      <button id="hydrophone_data_update">Get Data</button>
+    </div>
+  </div>
+</div>
+  
+
+</body>
+
+<script src="js/libraries/loader.js" type="text/javascript" type="text/javascript"></script>
+<script type="text/javascript">
+  google.charts.load('current', {'packages':['corechart']});
+  //google.charts.setOnLoadCallback(drawChart);
+
+  function drawChart(data) {
+    var len = data[0].raw_data.length;
+    var google_data_format = [
+      ['Data', 'Channel 1', 'Channel 2', 'Channel 3', 'Channel 4']
+    ];
+
+    for(var k=0; k<len; k++){
+      temp = [
+        k,
+        data[0].raw_data[k],
+        data[1].raw_data[k],
+        data[2].raw_data[k],
+        data[3].raw_data[k]
+      ]
+      google_data_format.push(temp);
+    }
+    
+    var data = google.visualization.arrayToDataTable(google_data_format);
+
+    var options = {
+      title: 'Hydrophone Voltage',
+      curveType: 'function',
+      legend: { position: 'bottom' }
+    };
+
+    var chart = new google.visualization.LineChart(document.getElementById('signal_chart'));
+
+    chart.draw(data, options);
+  }
+
+  var hydro_raw_data = new ROSLIB.Service({
+      ros : ros,
+      name : '/hydrophones/getRawData',
+      messageType : '/peripherals/hydro'
+  });
+
+  $("#hydrophone_data_update").click(function(){
+    var request = new ROSLIB.ServiceRequest({});
+
+    hydro_raw_data.callService(request, function(message){
+        success(message);
+    });
+  });
+
+  function success(message){
+    drawChart(message.hydro);
+  }
+</script>
+
+
+
+</html>
