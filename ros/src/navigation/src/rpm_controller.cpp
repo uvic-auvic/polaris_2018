@@ -145,6 +145,16 @@ void rpm_controller::compute_pwms(peripherals::motors &srv)
 bool rpm_controller::control_en(RpmCtrlEnReq &req, RpmCtrlEnRes &res)
 {
     this->control_sys_en = req.enable;
+
+    // If control system is being disabled, reset all controllers
+    if(!req.enable)
+    {   
+        for(int i = 0; i < thruster_controllers.size(); i++)
+        {       
+            thruster_controllers[i]->reset();
+        }
+    }
+
     return true;
 }
 

@@ -41,6 +41,14 @@ double position_controller::calculate(double position_desired, double position_a
     return this->velocity_pi->calculate(velocity_desired, velocity_actual);
 }
 
+void position_controller::reset()
+{       
+    this->velocity_desired = 0;
+    this->position_pi->reset();
+    this->position_derivator->reset();
+    this->velocity_pi->reset();
+}
+
 /* ------ Velocity Controller ------ */
 
 velocity_controller::velocity_controller(double min, double max, double dt, double Kpv, double Kiv)
@@ -58,4 +66,9 @@ double velocity_controller::calculate(double velocity_desired, double velocity_a
 {
     // Compute the velocity correction
     return this->velocity_pi->calculate(velocity_desired, velocity_actual);
+}
+
+void velocity_controller::reset()
+{       
+    velocity_pi->reset(); 
 }

@@ -10,6 +10,7 @@ public:
         double dt = 1.0, double Kpp = 0.1, double Kip = 0.01, double Kpv = 0.1, double Kiv = 0.01);
     ~position_controller();
     double calculate(double position_desired, double position_actual, double velocity_actual);
+    void reset();
 private:
     PID* position_pi;
     PID* position_derivator;
@@ -26,6 +27,7 @@ public:
     velocity_controller(double min = 0.0, double max = 1.0, double dt = 1.0, double Kpv = 0.1, double Kiv = 0.01);
     ~velocity_controller();
     double calculate(double velocity_desired, double velocity_actual);
+    void reset();
 private:
     PID* velocity_pi;
 };

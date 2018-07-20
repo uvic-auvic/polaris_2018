@@ -171,6 +171,33 @@ bool control_system::calibrate_surface_depth(AvgDataReq &req, AvgDataRes &res)
 bool control_system::control_enable_service(ControlEnReq &req, ControlEnRes &res)
 {       
     this->control_enables = req;
+
+    // Reset any control systems being disabled
+    if(!control_enables.vel_x_enable)
+    {
+        linear_vel_x->reset();
+    }
+    if(!control_enables.vel_y_enable)
+    {
+        linear_vel_y->reset();
+    }
+    if(!control_enables.vel_z_enable)
+    {
+        linear_pos_z->reset();
+    }
+    if(!control_enables.pitch_enable)
+    {
+        angular_pos_p->reset();
+    }
+    if(!control_enables.roll_enable)
+    {
+        angular_pos_r->reset();
+    }
+    if(!control_enables.yaw_enable)
+    {
+        angular_vel_yw->reset();
+    }
+
     return true;
 }
 

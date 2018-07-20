@@ -34,6 +34,7 @@
         <arg name="max_linear_vel" value="$(arg max_linear_vel)"/>
         <arg name="max_angular_vel" value="$(arg max_angular_vel)"/>
     </include>
+    <include file="$(find navigation)/launchfiles/rpm_controller.launch"/>
     <!--include file="$(find peripherals)/launchfiles/motors.launch"/-->
     <!--include file="$(find vision)/launchfiles/classifier.launch"/-->
     <!--include file="$(find vision)/launchfiles/sonia_bag.launch">
