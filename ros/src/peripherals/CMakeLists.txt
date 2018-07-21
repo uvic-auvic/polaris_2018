@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(peripherals)
-set(CMAKE_CXX_FLAGS "-std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 find_package(catkin REQUIRED COMPONENTS
   #message_generation
@@ -73,3 +73,6 @@ add_dependencies(imu monitor_generate_messages_cpp peripherals_generate_messages
 add_executable(hydrophones src/hydrophones.cpp)
 target_link_libraries(hydrophones ${catkin_LIBRARIES} ${serial_LIBRARIES})
 add_dependencies(hydrophones monitor_generate_messages_cpp peripherals_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
+
+#add_executable(exec_name src/file.cpp)
+#target_link_libraries(exec_name -lfftw3)
