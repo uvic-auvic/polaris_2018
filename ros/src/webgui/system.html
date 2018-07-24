@@ -55,17 +55,19 @@
 
 <nav class="navbar navbar-default">
   <div class="container-fluid">
-    <div class="navbar-header">
-      <a class="navbar-brand" href="/index.html">Polaris</a>
-      <a class="navbar-brand" href="/system.html">System</a>
-      <a class="navbar-brand" href="/video.html">Video</a>
-      <a class="navbar-brand" href="/hydrophone.html">Hydrophone</a>
+    <div id="navbar-header" class="navbar-header">
+      
     </div>
     <ul class="nav navbar-nav">
       <!--<li class="active"><a href="#">Home</a></li>-->
     </ul>
   </div>
 </nav>
+<script> 
+  $(function(){
+    $("#navbar-header").load("/html_includes/headers.html"); 
+  });
+</script> 
 
   <div class="container-fluid">
     <div class="col-lg-2">
@@ -146,7 +148,7 @@
     </div>
     <div class="col-lg-2">
       
-      <table class="table table-hover">
+      <table class="table table-hover IMU_Data">
           <thead>
             <tr>
               <th class="ros_topic_title"><h4>IMU</h4></th>
@@ -156,81 +158,65 @@
             <tr>
               <td>Stabilised Magnetic Field</td>
               <td>
-                  <p>
-                  <span id="stabilised_magnetic_field_x"></span> G
-                  <span id="stabilised_magnetic_field_y"></span> G
-                  <span id="stabilised_magnetic_field_z"></span> G
-                </p>
-                </td>
+                <p> X: <span id="stabilised_magnetic_field_x"></span> G </p>
+                <p> Y: <span id="stabilised_magnetic_field_y"></span> G </p>
+                <p> Z: <span id="stabilised_magnetic_field_z"></span> G </p>
+              </td>
             </tr>
             <tr>
               <td>Stabilised Acceleration</td>
               <td>
-                  <p>
-                    <span id="stabilised_acceleration_x"></span> <sup>m</sup>&frasl;<sub>s<sup>2</sup></sub>
-                    <span id="stabilised_acceleration_y"></span> <sup>m</sup>&frasl;<sub>s<sup>2</sup></sub>
-                    <span id="stabilised_acceleration_z"></span> <sup>m</sup>&frasl;<sub>s<sup>2</sup></sub>
-                </p>
-                </td>
+                <p> X: <span id="stabilised_acceleration_x"></span> <sup>m</sup>&frasl;<sub>s<sup>2</sup></sub> </p>
+                <p> Y: <span id="stabilised_acceleration_y"></span> <sup>m</sup>&frasl;<sub>s<sup>2</sup></sub> </p>
+                <p> Z: <span id="stabilised_acceleration_z"></span> <sup>m</sup>&frasl;<sub>s<sup>2</sup></sub> </p> 
+              </td>
             </tr>
           <tr>
             <td>Compensated Angular Rate</td>
             <td>
-              <p>
-                <span id="compensated_angular_rate_x"></span> <sup>&#176;</sup>&frasl;<sub>m</sub>
-                <span id="compensated_angular_rate_y"></span> <sup>&#176;</sup>&frasl;<sub>m</sub>
-                <span id="compensated_angular_rate_z"></span> <sup>&#176;</sup>&frasl;<sub>m</sub>
-            </p>
+              <p> X: <span id="compensated_angular_rate_x"></span> <sup>&#176;</sup>&frasl;<sub>m</sub> </p>
+              <p> Y: <span id="compensated_angular_rate_y"></span> <sup>&#176;</sup>&frasl;<sub>m</sub> </p>
+              <p> Z: <span id="compensated_angular_rate_z"></span> <sup>&#176;</sup>&frasl;<sub>m</sub> </p>
             </td>
           </tr>
           <tr>
             <td>Magnetic Field</td>
             <td>
-                <p>
-                  <span id="magnetic_field_x"></span> G
-                  <span id="magnetic_field_y"></span> G
-                  <span id="magnetic_field_z"></span> G
-              </p>
-              </td>
+              <p> X: <span id="magnetic_field_x"></span> G </p>
+              <p> Y: <span id="magnetic_field_y"></span> G </p>
+              <p> Z: <span id="magnetic_field_z"></span> G </p>
+            </td>
           </tr>
           <tr>
             <td>Acceleration</td>
             <td>
-              <p>
-                <span id="acceleration_x"></span> <sup>m</sup>&frasl;<sub>s<sup>2</sup></sub>
-                <span id="acceleration_y"></span> <sup>m</sup>&frasl;<sub>s<sup>2</sup></sub>
-                <span id="acceleration_z"></span> <sup>m</sup>&frasl;<sub>s<sup>2</sup></sub>
-            </p>
+              <p> X: <span id="acceleration_x"></span> <sup>m</sup>&frasl;<sub>s<sup>2</sup></sub></p>
+              <p> Y: <span id="acceleration_y"></span> <sup>m</sup>&frasl;<sub>s<sup>2</sup></sub></p>
+              <p> Z: <span id="acceleration_z"></span> <sup>m</sup>&frasl;<sub>s<sup>2</sup></sub></p>
             </td>
           </tr>
           <tr>
             <td>Angular Rate</td>
             <td>
-              <p>
-                <span id="angular_rate_x"></span> <sup>&#176;</sup>&frasl;<sub>m</sub>
-                <span id="angular_rate_y"></span> <sup>&#176;</sup>&frasl;<sub>m</sub>
-                <span id="angular_rate_z"></span> <sup>&#176;</sup>&frasl;<sub>m</sub>
-              </p>
+              <p> X: <span id="angular_rate_x"></span> <sup>&#176;</sup>&frasl;<sub>m</sub> </p>
+              <p> Y: <span id="angular_rate_y"></span> <sup>&#176;</sup>&frasl;<sub>m</sub> </p>
+              <p> Z: <span id="angular_rate_z"></span> <sup>&#176;</sup>&frasl;<sub>m</sub> </p>
             </td>
           </tr>
           <tr>
             <td>Velocity</td>
             <td>
-              <p>
-                <span id="velocity_x"></span> <sup>m</sup>&frasl;<sub>s</sub>
-                <span id="velocity_y"></span> <sup>m</sup>&frasl;<sub>s</sub>
-                <span id="velocity_z"></span> <sup>m</sup>&frasl;<sub>s</sub>
-              </p>
+              <p> X: <span id="velocity_x"></span> <sup>m</sup>&frasl;<sub>s</sub> </p>
+              <p> Y: <span id="velocity_y"></span> <sup>m</sup>&frasl;<sub>s</sub> </p>
+              <p> Z: <span id="velocity_z"></span> <sup>m</sup>&frasl;<sub>s</sub> </p>
             </td>
           </tr>
           <tr>
             <td>Euler Angles</td>
             <td>
-              <p>
-                <span id="euler_angles_x"></span> &#176;
-                <span id="euler_angles_y"></span> &#176;
-                <span id="euler_angles_z"></span> &#176;
-              </p>
+              <p> Roll:  <span id="euler_angles_roll"></span> &#176; </p>
+              <p> Pitch: <span id="euler_angles_pitch"></span> &#176; </p>
+              <p> Yaw:   <span id="euler_angles_yaw"></span> &#176; </p>
             </td>
           </tr>
           <tr>

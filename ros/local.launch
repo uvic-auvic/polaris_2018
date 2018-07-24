@@ -23,8 +23,9 @@
     </include-->
     <!--include file="$(find vision)/launchfiles/jetson_csi_cam.launch"/-->      
     <include file="$(find monitor)/launchfiles/serial.launch"/>
-    <!--include file="$(find peripherals)/launchfiles/power_board.launch"/-->
-    <!--include file="$(find peripherals)/launchfiles/imu.launch"/-->
+    <include file="$(find peripherals)/launchfiles/power_board.launch"/>
+    <include file="$(find peripherals)/launchfiles/imu.launch"/>
+    <include file="$(find peripherals)/launchfiles/hydrophones.launch"/>
     <include file="$(find navigation)/launchfiles/rov.launch"/>
     <include file="$(find navigation)/launchfiles/control_system.launch">
         <arg name="max_linear_vel" value="$(arg max_linear_vel)"/>
@@ -35,7 +36,7 @@
         <arg name="max_angular_vel" value="$(arg max_angular_vel)"/>
     </include>
     <include file="$(find navigation)/launchfiles/rpm_controller.launch"/>
-    <!--include file="$(find peripherals)/launchfiles/motors.launch"/-->
+    <include file="$(find peripherals)/launchfiles/motors.launch"/>
     <!--include file="$(find vision)/launchfiles/classifier.launch"/-->
     <!--include file="$(find vision)/launchfiles/sonia_bag.launch">
         <arg name="loc" value="/home/asinha/Documents/buoys/buoys-14h48-1.bag"/>

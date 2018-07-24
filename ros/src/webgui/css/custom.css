@@ -18,3 +18,7 @@ img{
     font-weight: bold;
     font-size: medium;
 }
+
+.IMU_Data p{
+    margin:0px;
+}

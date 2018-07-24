@@ -1,4 +1,4 @@
-var imu_reset = new ROSLIB.Service({
+var calibrate_depth = new ROSLIB.Service({
     ros : ros,
     name : '/nav/CalibrateSurfaceDepth',
     messageType : '/peripherals/avg_data'
@@ -10,6 +10,6 @@ $("#depth_calibrate").click(function(){
         acq_count:100
     });
 
-    imu_reset.callService(request);
+    calibrate_depth.callService(request);
 });
 

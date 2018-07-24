@@ -48,10 +48,6 @@
     });
 
   </script>
-  <script src="js/controller.js" type="text/javascript" type="text/javascript"></script>
-  <script src="js/keyboard.js" type="text/javascript" type="text/javascript"></script>
-  <script src="js/find_video_feeds.js" type="text/javascript" type="text/javascript"></script>
-  <script src="js/topics/power_board.js" type="text/javascript" type="text/javascript"></script>
 </head>
 <body>
 
@@ -74,21 +70,6 @@
   <div class="container-fluid">
 
     <div id="home_view" class="row">
-      <div class="col-lg-8">
-        <!--<h3>Video Stream</h3>-->
-        <div>
-          <div>
-              <select id="main-video-selector" name="text"> <!--Supplement an id here instead of using 'text'-->
-              </select>
-          </div>
-
-          
-          <div id="main-video-box">
-              <img id="main-video-stream" src=''/> 
-          </div> 
-          
-        </div>
-      </div>
       <div class="col-lg-2">
           <h2>System Info</h2>
           <!--<h4>Power Board</h4>-->
@@ -99,15 +80,15 @@
               </tr>
             </thead>
             <tbody>  
-              <tr id="pb_batt_1_volt_row">
+              <tr>
                 <td>Battery 1 Voltage</td>
                 <td>
-                  <p>
+                    <p>
                     <span id="pb_batt_1_volt"></span> V
                   </p>
                   </td>
               </tr>
-              <tr id="pb_batt_2_volt_row">
+              <tr>
                 <td>Battery 2 Voltage</td>
                 <td>
                     <p>
@@ -270,6 +251,7 @@
             <thead>
                 <tr>
                   <th class="ros_topic_title"><h4>Control System</h4></th>
+                  <th><button id="control_system_settings_button"> Send</button></th>
                 </tr>
               </thead>
             <tbody id="control_system_settings">
@@ -286,7 +268,7 @@
                 </td>
               </tr>
               <tr>
-                <td>Velocity X Enable</td>
+                <td>Velocity Z Enable</td>
                 <td>
                   <input id="vel_z_enable" type="checkbox" value="" checked>
                 </td>
@@ -311,6 +293,102 @@
               </tr>
             </tbody>
           </table>
+        </div>
+        <div class="col-lg-2">
+          <table class="table table-hover IMU_Data">
+                <thead>
+                  <tr>
+                    <th class="ros_topic_title"><h4>IMU</h4></th>
+                  </tr>
+                </thead>
+                <tbody>  
+                  <tr>
+                    <td>Stabilised Magnetic Field</td>
+                    <td>
+                      <p> X: <span id="stabilised_magnetic_field_x"></span> G </p>
+                      <p> Y: <span id="stabilised_magnetic_field_y"></span> G </p>
+                      <p> Z: <span id="stabilised_magnetic_field_z"></span> G </p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Stabilised Acceleration</td>
+                    <td>
+                      <p> X: <span id="stabilised_acceleration_x"></span> <sup>m</sup>&frasl;<sub>s<sup>2</sup></sub> </p>
+                      <p> Y: <span id="stabilised_acceleration_y"></span> <sup>m</sup>&frasl;<sub>s<sup>2</sup></sub> </p>
+                      <p> Z: <span id="stabilised_acceleration_z"></span> <sup>m</sup>&frasl;<sub>s<sup>2</sup></sub> </p> 
+                    </td>
+                  </tr>
+                <tr>
+                <td>Acceleration</td>
+                <td>
+                  <p> X: <span id="acceleration_x"></span> <sup>m</sup>&frasl;<sub>s<sup>2</sup></sub></p>
+                  <p> Y: <span id="acceleration_y"></span> <sup>m</sup>&frasl;<sub>s<sup>2</sup></sub></p>
+                  <p> Z: <span id="acceleration_z"></span> <sup>m</sup>&frasl;<sub>s<sup>2</sup></sub></p>
+                </td>
+              </tr>
+              <tr>
+                <td>Angular Rate</td>
+                <td>
+                  <p> X: <span id="angular_rate_x"></span> <sup>&#176;</sup>&frasl;<sub>m</sub> </p>
+                  <p> Y: <span id="angular_rate_y"></span> <sup>&#176;</sup>&frasl;<sub>m</sub> </p>
+                  <p> Z: <span id="angular_rate_z"></span> <sup>&#176;</sup>&frasl;<sub>m</sub> </p>
+                </td>
+              </tr>
+              <tr>
+                <td>Velocity</td>
+                <td>
+                  <p> X: <span id="velocity_x"></span> <sup>m</sup>&frasl;<sub>s</sub> </p>
+                  <p> Y: <span id="velocity_y"></span> <sup>m</sup>&frasl;<sub>s</sub> </p>
+                  <p> Z: <span id="velocity_z"></span> <sup>m</sup>&frasl;<sub>s</sub> </p>
+                </td>
+              </tr>
+              <tr>
+                <td>Euler Angles</td>
+                <td>
+                  <p> Roll:  <span id="euler_angles_roll"></span> &#176; </p>
+                  <p> Pitch: <span id="euler_angles_pitch"></span> &#176; </p>
+                  <p> Yaw:   <span id="euler_angles_yaw"></span> &#176; </p>
+                </td>
+              </tr>
+              <tr>
+                <td>Temperature</td>
+                <td>
+                  <p>
+                    <span id="imu_temp"></span> &#8451;
+                  </p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="col-lg-2">
+          <table class="table table-hover IMU_Data">
+            <thead>
+              <tr>
+                <th class="ros_topic_title"><h4>Velocity Vectors</h4></th>
+              </tr>
+            </thead>
+            <tbody>  
+              <tr>
+                <td>Velocity</td>
+                <td>
+                  <p> X: <span id="cs_velocity_x"></span> <sup>m</sup>&frasl;<sub>s</sub> </p>
+                  <p> Y: <span id="cs_velocity_y"></span> <sup>m</sup>&frasl;<sub>s</sub> </p>
+                  <p> Z: <span id="cs_velocity_z"></span> <sup>m</sup>&frasl;<sub>s</sub> </p>
+                </td>
+              </tr>
+              <tr>
+                <td>Angular Velocity</td>
+                <td>
+                  <p> Roll: <span id="cs_ang_vel_roll"></span> <sup>&#176;</sup>&frasl;<sub>s</sub> </p>
+                  <p> Pitch: <span id="cs_ang_vel_pitch"></span> <sup>&#176;</sup>&frasl;<sub>s</sub> </p>
+                  <p> Yaw: <span id="cs_ang_vel_yaw"></span> <sup>&#176;</sup>&frasl;<sub>s</sub> </p> 
+                </td>
+              </tr>
+            <tr>
+          </table>
+        </div>
+        <div class="col-lg-2">
           <table class="table table-hover">
             <thead>
               <tr>
@@ -318,9 +396,20 @@
               </tr>
             </thead>
           </table>
-          <button id="imu_reset">
-            Reset IMU Vector
+          <div class="input-group">
+              <input id="imu_x_vel_opt" type="text" class="form-control" placeholder="X"/>
+              <span class="input-group-addon"> </span>
+              <input id="imu_y_vel_opt" type="text" class="form-control" placeholder="Y"/>
+              <span class="input-group-addon"> </span>
+              <input id="imu_z_vel_opt" type="text" class="form-control" placeholder="Z"/>
+          </div>
+          <br>
+          <button id="imu_set">
+            Set IMU Velocity
           </button>
+          <button id="imu_reset">
+              Zero IMU Velocity
+            </button>
           <table class="table table-hover">
             <thead>
               <tr>
@@ -331,11 +420,8 @@
           <button id="depth_calibrate">
             Calibrate Surface Pressure
           </button>
+        </div>
       </div>
-
-    
-  </div>
-  </div>
   
 
 </body>
@@ -345,5 +431,7 @@
 <script src="js/services/calibrate_depth.js" type="text/javascript" type="text/javascript"></script>
 <script src="js/services/control_system_enable.js" type="text/javascript" type="text/javascript"></script>
 <script src="js/topics/nav.js" type="text/javascript" type="text/javascript"></script>
+<script src="js/topics/imu.js" type="text/javascript" type="text/javascript"></script>
+<script src="js/topics/nav_velocity.js" type="text/javascript" type="text/javascript"></script>
 
 </html>

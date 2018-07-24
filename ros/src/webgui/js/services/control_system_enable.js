@@ -4,8 +4,7 @@ var ctrl_sys_en = new ROSLIB.Service({
     messageType : '/navigation/control_en'
 });
 
-$("#control_system_settings").click(function(){
-    console.log("clicked");
+$("#control_system_settings_button").click(function(){
     var b_vel_x_enable = document.getElementById('vel_x_enable').checked;
     var b_vel_y_enable = document.getElementById('vel_y_enable').checked;
     var b_vel_z_enable = document.getElementById('vel_z_enable').checked;

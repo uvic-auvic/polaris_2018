@@ -20,7 +20,8 @@ class MyTCPServer(SocketServer.TCPServer):
 if __name__ == '__main__':
     Handler = SimpleHTTPServer.SimpleHTTPRequestHandler
     httpd = MyTCPServer(("0.0.0.0", PORT), Handler)
-    os.chdir(os.path.dirname(__file__))
+    web_dir = os.path.join(os.path.dirname(__file__))
+    os.chdir(web_dir)
     signal.signal(signal.SIGINT, httpd.signal_handler)
     httpd.serve_forever()
         

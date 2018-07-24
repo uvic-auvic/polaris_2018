@@ -10,6 +10,7 @@
   <script src="bootstrap-3.3.7-dist/js/bootstrap.min.js"></script>
   <script type="text/javascript" src="js/libraries/eventemitter2.min.js"></script>
   <script type="text/javascript" src="js/libraries/roslib.min.js"></script>
+  <script type="text/javascript" src="js/helpers/download_json.js"></script>
   <script type="text/javascript" type="text/javascript">
     // Connecting to ROS
     // -----------------
@@ -48,22 +49,34 @@
 
   </script>
 
+  <script src="js/libraries/chart_2.7.2.bundle.min.js"></script>
+  <!--<script src="http://www.chartjs.org/samples/latest/utils.js"></script>-->
+  <style>
+    canvas{
+      -moz-user-select: none;
+      -webkit-user-select: none;
+      -ms-user-select: none;
+    }
+  </style>
+
 </head>
 <body>
 
 <nav class="navbar navbar-default">
   <div class="container-fluid">
-    <div class="navbar-header">
-      <a class="navbar-brand" href="/index.html">Polaris</a>
-      <a class="navbar-brand" href="/system.html">System</a>
-      <a class="navbar-brand" href="/video.html">Video</a>
-      <a class="navbar-brand" href="/hydrophone.html">Hydrophone</a>
+    <div id="navbar-header" class="navbar-header">
+      
     </div>
     <ul class="nav navbar-nav">
       <!--<li class="active"><a href="#">Home</a></li>-->
     </ul>
   </div>
 </nav>
+<script> 
+  $(function(){
+    $("#navbar-header").load("/html_includes/headers.html"); 
+  });
+</script> 
 <div class="container-fluid">
   <div id="home_view" class="row">
     <div class="col-lg-12">
@@ -74,52 +87,98 @@
   <div id="home_view" class="row">
     <div class="col-lg-12">
       <button id="hydrophone_data_update">Get Data</button>
+      <button id="download_json">Download JSON</button>
     </div>
   </div>
 </div>
   
 
-</body>
 
-<script src="js/libraries/loader.js" type="text/javascript" type="text/javascript"></script>
-<script type="text/javascript">
-  google.charts.load('current', {'packages':['corechart']});
-  //google.charts.setOnLoadCallback(drawChart);
 
-  function drawChart(data) {
-    var len = data[0].raw_data.length;
-    var google_data_format = [
-      ['Data', 'Channel 1', 'Channel 2', 'Channel 3', 'Channel 4']
-    ];
+<div style="width:100%;">
+  <canvas id="canvas"></canvas>
+</div>
 
-    for(var k=0; k<len; k++){
-      temp = [
-        k,
-        data[0].raw_data[k],
-        data[1].raw_data[k],
-        data[2].raw_data[k],
-        data[3].raw_data[k]
-      ]
-      google_data_format.push(temp);
+<script>
+  hydro_time_domain_data = null;
+
+  function build_chart_config(data)
+  {
+    var config = {
+    type: 'line',
+    data: {
+      labels: Array.from(Array(data[0].raw_data.length).keys()),
+      datasets: [{
+        label: 'Ch 1',
+        backgroundColor: 'red',
+        borderColor: 'red',
+        data: data[0].raw_data,
+        fill: false,
+      }, {
+        label: 'Ch 2',
+        fill: false,
+        backgroundColor: 'blue',
+        borderColor: 'blue',
+        data: data[1].raw_data,
+      }, {
+        label: 'Ch 3',
+        fill: false,
+        backgroundColor: 'green',
+        borderColor: 'green',
+        data: data[2].raw_data,
+      }, {
+        label: 'Ch 4',
+        fill: false,
+        backgroundColor: 'purple',
+        borderColor: 'purple',
+        data: data[3].raw_data,
+      }]
+    },
+    options: {
+      responsive: true,
+      title: {
+        display: false,
+        text: 'Hydrophone Time Domain Signal'
+      },
+      tooltips: {
+        mode: 'index',
+        intersect: false,
+      },
+      hover: {
+        mode: 'nearest',
+        intersect: true
+      },
+      scales: {
+        xAxes: [{
+          display: true,
+          scaleLabel: {
+            display: true,
+            labelString: 'Time'
+          },
+          ticks: {
+            autoSkip: true,
+            maxTicksLimit: 500,
+            minTicksLimit: 200
+          }
+        }],
+        yAxes: [{
+          display: true,
+          scaleLabel: {
+            display: true,
+            labelString: 'mV'
+          }
+        }]
+      }
     }
-    
-    var data = google.visualization.arrayToDataTable(google_data_format);
-
-    var options = {
-      title: 'Hydrophone Voltage',
-      curveType: 'function',
-      legend: { position: 'bottom' }
     };
 
-    var chart = new google.visualization.LineChart(document.getElementById('signal_chart'));
-
-    chart.draw(data, options);
+    return config;
   }
 
   var hydro_raw_data = new ROSLIB.Service({
-      ros : ros,
-      name : '/hydrophones/getRawData',
-      messageType : '/peripherals/hydro'
+    ros : ros,
+    name : '/hydrophones/getRawData',
+    messageType : '/peripherals/hydro'
   });
 
   $("#hydrophone_data_update").click(function(){
@@ -131,10 +190,23 @@
   });
 
   function success(message){
-    drawChart(message.hydro);
+    hydro_time_domain_data = message.hydro;
+    var ctx = document.getElementById('canvas').getContext('2d');
+    var config = build_chart_config(message.hydro);
+    window.myLine = new Chart(ctx, config);
   }
+
+  $("#download_json").click(function(){
+    if(hydro_time_domain_data != null){
+      downloadObjectAsJson(hydro_time_domain_data, "Hydrophone_Data.json");
+    }else{
+      alert("No Data to export");
+    }
+  });
+
 </script>
 
+</body>
 
 
 </html>

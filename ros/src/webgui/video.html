@@ -7,6 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="bootstrap-3.3.7-dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="/css/custom.css">
+  <script src="bootstrap-3.3.7-dist/js/jquery-3.3.1.min.js"></script>
 <style>
 body, html {
     min-height: 100%;
@@ -29,19 +30,19 @@ body, html {
 </head>
 <body>
 
-    <nav class="navbar navbar-default">
-        <div class="container-fluid">
-            <div class="navbar-header">
-                <a class="navbar-brand" href="/index.html">Polaris</a>
-                <a class="navbar-brand" href="/system.html">System</a>
-                <a class="navbar-brand" href="/video.html">Video</a>
-                <a class="navbar-brand" href="/hydrophone.html">Hydrophone</a>
-            </div>
-            <ul class="nav navbar-nav">
-            <!--<li class="active"><a href="#">Home</a></li>-->
-            </ul>
+<nav class="navbar navbar-default">
+    <div class="container-fluid">
+        <div id="navbar-header" class="navbar-header">
+        
         </div>
-    </nav>
+        <ul class="nav navbar-nav">
+        <!--<li class="active"><a href="#">Home</a></li>-->
+        </ul>
+    </div>
+</nav>
+<script> 
+    $("#navbar-header").load("/html_includes/headers.html"); 
+</script> 
     <div>
         <div >
             <select id="main-video-selector" name="text"> <!--Supplement an id here instead of using 'text'-->
