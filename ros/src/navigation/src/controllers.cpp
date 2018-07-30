@@ -32,9 +32,13 @@ double position_controller::calculate(double position_desired, double position_a
     double position_correction = this->position_pi->calculate(position_desired, position_actual);
 
     // Take derivative of positional correction to get a velocity 
-    if(position_correction > min_pos && position_correction < max_pos)
+    double derivative = this->position_derivator->calculate(position_correction, 0);
+
+    // Special case occurs when the position correction hits the rails. The derivative goes to 0
+    // There is a case where the position might jump from one rail to the next. In that case, the derivative will change sign.
+    if((position_correction > min_pos && position_correction < max_pos) || (velocity_desired * derivative) < 0)
     {
-        velocity_desired = this->position_derivator->calculate(position_correction, 0);
+        velocity_desired = derivative;
     }
 
     // Compute a velocity correction

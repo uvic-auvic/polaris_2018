@@ -391,7 +391,6 @@ int main(int argc, char ** argv)
     // Get loop rate parameters
     int publish_rate, updates_per_publish;
     nh.getParam("publish_rate", publish_rate);
-    nh.getParam("updates_per_publish", updates_per_publish);
 
     // Get the port the device is on
     ros::ServiceClient client = nh.serviceClient<monitor::GetSerialDevice>("/serial_manager/GetDevicePort");
@@ -402,7 +401,6 @@ int main(int argc, char ** argv)
 
     ROS_INFO("Using IMU on fd \"%s\"", srv.response.device_fd.c_str());
     imu dev(srv.response.device_fd);
-    //imu dev("/dev/ttyUSB0");
 
     // Declare service calls
     ros::ServiceServer vel_setter = nh.advertiseService("set_velocity", &imu::set_velocity, &dev);
@@ -411,61 +409,33 @@ int main(int argc, char ** argv)
     ros::Publisher pub = nh.advertise<peripherals::imu>(topic_name, topic_buffer_size);
 
     // Update velocity "updates_per_publish" times for every topic publish
-    ros::Rate r(publish_rate * updates_per_publish);
-    uint16_t count = 0;
+    ros::Rate r(publish_rate);
     while(ros::ok()) {
+        peripherals::imu msg;
+        bool valid_msg = true;
+        
+        // Get the Temperature of the IMU
+        valid_msg = dev.get_temperature(msg.temperature) && valid_msg;
 
-        dev.update_velocity();
+        // Get the Stabilised Euler Angles
+        valid_msg = dev.get_euler_stable(msg.euler_angles) && valid_msg;
 
-        if((++count % updates_per_publish) == 0) {
-            peripherals::imu msg;
-            bool valid_msg = true;
+        // Get the Stabilised IMU Sensor Vectors
+        valid_msg = dev.get_mag_accel_gyro_stable(msg.stabilised_magnetic_field, 
+                msg.stabilised_acceleration, msg.compensated_angular_rate, msg.stabilised_vectors_timestamp) && valid_msg;
 
-            count = 0;
+        // Get the Instantaneous IMU Sensor Vectors
+        valid_msg = dev.get_mag_accel_gyro(msg.magnetic_field, msg.acceleration, msg.angular_rate, 
+                msg.instantaneous_vectors_timestamp) && valid_msg;
 
-            // Get the Temperature of the IMU
-            valid_msg = dev.get_temperature(msg.temperature) && valid_msg;
-
-            // Get the Stabilised Euler Angles
-            valid_msg = dev.get_euler_stable(msg.euler_angles) && valid_msg;
-
-            // Get the Stabilised IMU Sensor Vectors
-            valid_msg = dev.get_mag_accel_gyro_stable(msg.stabilised_magnetic_field, 
-                    msg.stabilised_acceleration, msg.compensated_angular_rate, msg.stabilised_vectors_timestamp) && valid_msg;
-
-            // Get the Instantaneous IMU Sensor Vectors
-            valid_msg = dev.get_mag_accel_gyro(msg.magnetic_field, msg.acceleration, msg.angular_rate, 
-                    msg.instantaneous_vectors_timestamp) && valid_msg;
-
-            // Get the velocity
-            dev.get_velocity(msg.velocity);
-
-            if(valid_msg) {   
-                // Publish message
-                pub.publish(msg);
-
-                /*ROS_INFO("Temperature: %f", msg.temperature);
-                ROS_INFO("Velocity: X:%f, Y:%f, Z:%f", msg.velocity.x, msg.velocity.y, msg.velocity.z);
-                ROS_INFO("Euler Angles: P:%f, R:%f, Y:%f", msg.euler_angles.pitch, msg.euler_angles.roll, msg.euler_angles.yaw);
-                ROS_INFO("Stabilised Mag: X:%f, Y:%f, Z:%f", msg.stabilised_magnetic_field.x, msg.stabilised_magnetic_field.y, 
-                        msg.stabilised_magnetic_field.z);
-                ROS_INFO("Stabilised Accel: X:%f, Y:%f, Z:%f", msg.stabilised_acceleration.x, msg.stabilised_acceleration.y, 
-                        msg.stabilised_acceleration.z);
-                ROS_INFO("Compensated Gyro: X:%f, Y:%f, Z:%f", msg.compensated_angular_rate.x, msg.compensated_angular_rate.y, 
-                        msg.compensated_angular_rate.z);
-                ROS_INFO("Stabilised Vector Timestamp: %f", msg.stabilised_vectors_timestamp);
-                ROS_INFO("Mag: X:%f, Y:%f, Z:%f", msg.magnetic_field.x, msg.magnetic_field.y, 
-                        msg.magnetic_field.z);
-                ROS_INFO("Accel: X:%f, Y:%f, Z:%f", msg.acceleration.x, msg.acceleration.y, 
-                        msg.acceleration.z);
-                ROS_INFO("Gyro: X:%f, Y:%f, Z:%f", msg.angular_rate.x, msg.angular_rate.y, 
-                        msg.angular_rate.z);
-                ROS_INFO("Instantaneous Vector Timestamp: %f\n", msg.instantaneous_vectors_timestamp);*/
-            }
-            else {  
-                ROS_ERROR("Invalid message.");
-            }
+        if(valid_msg) {   
+            // Publish message
+            pub.publish(msg);
         }
+        else {  
+            ROS_ERROR("Invalid message.");
+        }
+
         ros::spinOnce();
         r.sleep();
     }

@@ -2,6 +2,7 @@
 #include "navigation/nav.h"
 #include "navigation/nav_request.h"
 #include "navigation/control_en.h"
+#include "navigation/depth_info.h"
 #include "peripherals/imu.h"
 #include "peripherals/powerboard.h"
 #include "peripherals/avg_data.h"
@@ -24,6 +25,7 @@ public:
     void receive_imu_data(const peripherals::imu::ConstPtr &msg);
     void receive_powerboard_data(const peripherals::powerboard::ConstPtr &msg);
     void compute_output_vectors(navigation::nav &msg);
+    void populate_depth_data(navigation::depth_info &msg);
     bool calibrate_surface_depth(AvgDataReq &req, AvgDataRes &res);
     bool control_enable_service(ControlEnReq &req, ControlEnRes &res);
 private:
@@ -31,12 +33,10 @@ private:
     ros::NodeHandle nh;
 
     // Controllers
-    velocity_controller* linear_vel_x;
-    velocity_controller* linear_vel_y;
-    position_controller* linear_pos_z;
     position_controller* angular_pos_p;
     position_controller* angular_pos_r;
     velocity_controller* angular_vel_yw;
+    velocity_controller* linear_vel_z;
 
     // Data
     navigation::nav_request::ConstPtr current_request;
@@ -61,32 +61,18 @@ control_system::control_system():
     control_enables.pitch_enable = control_enables.roll_enable = control_enables.yaw_enable = true;
 
     // General Control System Parameters
-    double dt, min_lin_vel, max_lin_vel, min_lin_pos, max_lin_pos;
+    double dt, min_lin_vel, max_lin_vel;
     double min_angl_vel, max_angl_vel, min_angl_pos, max_angl_pos;
     nh.getParam("dt", dt);
     nh.getParam("min_linear_vel", min_lin_vel);
     nh.getParam("max_linear_vel", max_lin_vel);
-    nh.getParam("min_linear_pos", min_lin_pos);
-    nh.getParam("max_linear_pos", max_lin_pos);
     nh.getParam("min_angular_vel", min_angl_vel);
     nh.getParam("max_angular_vel", max_angl_vel);
     nh.getParam("min_angular_pos", min_angl_pos);
     nh.getParam("max_angular_pos", max_angl_pos);
     
-    // Velocity X Control System
-    double Kp_vel_x, Ki_vel_x;
-    nh.getParam("Kp_vel_x", Kp_vel_x);
-    nh.getParam("Ki_vel_x", Ki_vel_x);
-
-    // Velocity Y Control System
-    double Kp_vel_y, Ki_vel_y;
-    nh.getParam("Kp_vel_y", Kp_vel_y);
-    nh.getParam("Ki_vel_y", Ki_vel_y);
-
-    // Position Z Control System
-    double Kp_pos_z, Ki_pos_z, Kp_vel_z, Ki_vel_z;
-    nh.getParam("Kp_pos_z", Kp_pos_z);
-    nh.getParam("Ki_pos_z", Ki_pos_z);
+    // Veloctiy Z Control System
+    double Kp_vel_z, Ki_vel_z;
     nh.getParam("Kp_vel_z", Kp_vel_z);
     nh.getParam("Ki_vel_z", Ki_vel_z);
 
@@ -109,22 +95,17 @@ control_system::control_system():
     nh.getParam("Kp_vel_yw", Kp_vel_yw);
     nh.getParam("Ki_vel_yw", Ki_vel_yw);
 
-    linear_vel_x = new velocity_controller(min_lin_vel, max_lin_vel, dt, Kp_vel_x, Ki_vel_x);
-    linear_vel_y = new velocity_controller(min_lin_vel, max_lin_vel, dt, Kp_vel_y, Ki_vel_y);
-    linear_pos_z = new position_controller(
-            min_lin_vel, max_lin_vel, min_lin_pos, max_lin_pos, dt, Kp_pos_z, Ki_pos_z, Kp_vel_z, Ki_vel_z);
     angular_pos_p = new position_controller(
             min_angl_vel, max_angl_vel, min_angl_pos, max_angl_pos, dt, Kp_pos_p, Ki_pos_p, Kp_vel_p, Ki_vel_p);
     angular_pos_r = new position_controller(
             min_angl_vel, max_angl_vel, min_angl_pos, max_angl_pos, dt, Kp_pos_r, Ki_pos_r, Kp_vel_r, Ki_vel_r);
     angular_vel_yw = new velocity_controller(min_angl_vel, max_angl_vel, dt, Kp_vel_yw, Ki_vel_yw);
+    linear_vel_z = new velocity_controller(min_lin_vel, max_lin_vel, dt, Kp_vel_z, Ki_vel_z);
 }
 
 control_system::~control_system()
 {       
-    delete linear_vel_x;
-    delete linear_vel_y;
-    delete linear_pos_z;
+    delete linear_vel_z;
     delete angular_pos_p;
     delete angular_pos_r;
     delete angular_vel_yw;
@@ -173,17 +154,9 @@ bool control_system::control_enable_service(ControlEnReq &req, ControlEnRes &res
     this->control_enables = req;
 
     // Reset any control systems being disabled
-    if(!control_enables.vel_x_enable)
-    {
-        linear_vel_x->reset();
-    }
-    if(!control_enables.vel_y_enable)
-    {
-        linear_vel_y->reset();
-    }
     if(!control_enables.vel_z_enable)
     {
-        linear_pos_z->reset();
+        linear_vel_z->reset();
     }
     if(!control_enables.pitch_enable)
     {
@@ -207,15 +180,15 @@ void control_system::compute_output_vectors(navigation::nav &msg)
     {
         if(control_enables.vel_x_enable)
         {
-            msg.direction.x = linear_vel_x->calculate(current_request->forwards_velocity, imu_data->velocity.x);
+            msg.direction.x = current_request->forwards_velocity;
         }
         if(control_enables.vel_y_enable)
         {
-            msg.direction.y = linear_vel_y->calculate(current_request->sideways_velocity, imu_data->velocity.y);
+            msg.direction.y = current_request->sideways_velocity;
         }
         if(control_enables.vel_z_enable)
         {
-            msg.direction.z = linear_pos_z->calculate(current_request->depth, current_depth, imu_data->velocity.z);
+            msg.direction.z = linear_vel_z->calculate(current_request->depth, current_depth);
         }
         if(control_enables.pitch_enable)
         {
@@ -236,6 +209,12 @@ void control_system::compute_output_vectors(navigation::nav &msg)
     }
 }
 
+void control_system::populate_depth_data(navigation::depth_info &msg)
+{       
+    msg.desired_depth = current_request->depth;
+    msg.current_depth = current_depth;
+}
+
 int main(int argc, char ** argv)
 {
     ros::init(argc, argv, "control_system");
@@ -243,6 +222,9 @@ int main(int argc, char ** argv)
 
     double loop_rate, max_lin_vel;
     nh.getParam("loop_rate", loop_rate);
+    
+    int loops_per_param_update;
+    nh.getParam("loops_per_param_update", loops_per_param_update);
 
     control_system ctrl;
 
@@ -254,6 +236,8 @@ int main(int argc, char ** argv)
 
     ros::Publisher pub_vectors = nh.advertise<navigation::nav>("/nav/velocity_vectors", 1);
 
+    ros::Publisher pub_ctrl_params = nh.advertise<navigation::depth_info>("/nav/depth_control_info", 1);
+
     ros::Subscriber sub_nav = nh.subscribe<navigation::nav_request>
         ("/nav/navigation", 1, &control_system::receive_nav_request, &ctrl);
 
@@ -264,6 +248,7 @@ int main(int argc, char ** argv)
         ("/power_board/power_board_data", 1, &control_system::receive_powerboard_data, &ctrl);
 
     ros::Rate r(loop_rate);
+    uint8_t count = 0;
     while(ros::ok()) { 
         // Get the output vectors from the control system
         navigation::nav output_vectors;
@@ -271,6 +256,18 @@ int main(int argc, char ** argv)
 
         // Publish the vectors
         pub_vectors.publish(output_vectors);
+
+        if(++count == loops_per_param_update)
+        {
+            count = 0;
+
+            // Get the control system parameters
+            navigation::depth_info parameters;
+            ctrl.populate_depth_data(parameters);
+
+            // Publish the control system parameters
+            pub_ctrl_params.publish(parameters);
+        }
 
         ros::spinOnce();
         r.sleep();

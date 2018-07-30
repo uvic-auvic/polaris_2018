@@ -23,6 +23,7 @@ find_package(
    keyboard.msg
    nav_request.msg
    thrusts.msg
+   depth_info.msg
  )
 
 add_service_files(
