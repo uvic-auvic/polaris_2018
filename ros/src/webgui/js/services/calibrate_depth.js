@@ -11,7 +11,7 @@ $("#depth_calibrate").click(function(){
     });
 
     calibrate_depth.callService(request, function(message){
-        $("#depth_pressure_offset").text(message.avg_data);
+        $("#depth_pressure_offset").text((message.avg_data/101325).toFixed(2));
     });
 });
 

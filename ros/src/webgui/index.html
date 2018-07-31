@@ -284,9 +284,26 @@
               </tr>
             </thead>
           </table>
-          <button id="depth_calibrate">
-            Calibrate Surface Pressure
-          </button>
+          <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th class="ros_topic_title">Calibrate Depth Sensor</th>
+                  <th>Offset</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th>
+                    <button id="depth_calibrate">
+                      Calibrate
+                    </button>
+                  </th>
+                  <th>
+                      <span id="depth_pressure_offset"></span> ATM
+                  </th>
+                </tr>
+              </tbody>
+            </table>
       </div>
 
     
