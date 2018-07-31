@@ -2,17 +2,29 @@
 #include <vector>
 #include <string>
 #include <serial/serial.h>
+#include <math.h>
 
 #include "peripherals/hydro_data.h"
 #include "peripherals/hydro.h"
+#include "peripherals/hydro_fft.h"
+#include "peripherals/hydro_ffts.h"
+#include "peripherals/polar_num.h"
+#include "peripherals/hydro_phases.h"
 #include "monitor/GetSerialDevice.h"
+#include "fftw3.h"
 
 #define NUM_HYDROPHONES (4)
 #define PKT_HEADER_SIZE (12)
 #define MAX_RESENDS     (3)
+#define REAL            (0)
+#define IMAG            (1)
 
 using HydroDataReq = peripherals::hydro_data::Request;
 using HydroDataRes = peripherals::hydro_data::Response;
+using HydroFFTsReq = peripherals::hydro_ffts::Request;
+using HydroFFTsRes = peripherals::hydro_ffts::Response;
+using HydroPhasesReq = peripherals::hydro_phases::Request;
+using HydroPhasesRes = peripherals::hydro_phases::Response;
 
 class hydrophones
 {       
@@ -21,11 +33,19 @@ public:
     ~hydrophones();
     std::string write(const std::string out, bool ignore_response = true, const std::string eol = "\n");
     bool get_raw_data(HydroDataReq &req, HydroDataRes &res);
+    bool get_fft_data(HydroFFTsReq &req, HydroFFTsRes &res);
+    bool get_hydro_phases(HydroPhasesReq &req, HydroPhasesRes &res);
 private:
     bool acquire_hydro_data(std::vector<peripherals::hydro> &hydro_data);
+    bool compute_fft(std::vector<peripherals::hydro_fft> &hydro_ffts);
     uint32_t stm32f4_crc32(uint8_t* data, size_t data_len, uint32_t crc = 0xFFFFFFFF);
     ros::NodeHandle nh;
     std::unique_ptr<serial::Serial> connection = nullptr;
+
+    std::vector<fftw_plan> fftw_forward_plans;
+    std::vector<double*> fftw_inputs;
+    std::vector<fftw_complex*> fftw_outputs;
+    uint16_t fft_size;
 };
 
 hydrophones::hydrophones(const std::string port, int baud_rate, int timeout) :
@@ -70,12 +90,29 @@ hydrophones::hydrophones(const std::string port, int baud_rate, int timeout) :
         data_size_actual = (d_size[1] << 8) | d_size[0];
         ROS_INFO("Data size is set to %u", data_size_actual);
     }
+
+    uint16_t channel_size = (data_size_actual/2) / NUM_HYDROPHONES;
+    this->fft_size = (channel_size/2) + 1;
+    for(int i = 0; i < NUM_HYDROPHONES; i++)
+    {
+        fftw_inputs.push_back(new double[channel_size]);
+        fftw_outputs.push_back(fftw_alloc_complex(fft_size));
+        fftw_forward_plans.push_back(
+            fftw_plan_dft_r2c_1d(channel_size, &fftw_inputs.back()[0], &fftw_outputs.back()[0], FFTW_MEASURE));
+    }
 }
 
 hydrophones::~hydrophones()
 {      
     connection->flush();
     connection->close();
+
+    for(int i = 0; i < fftw_forward_plans.size(); i++)
+    {
+        fftw_destroy_plan(fftw_forward_plans[i]);
+        fftw_free(fftw_outputs[i]);
+        delete[] fftw_inputs[i];
+    }
 }
 
 std::string hydrophones::write(const std::string out, bool ignore_response, const std::string eol)
@@ -92,9 +129,81 @@ std::string hydrophones::write(const std::string out, bool ignore_response, cons
     return connection->readline(65536ul, eol);
 }
 
+bool hydrophones::get_hydro_phases(HydroPhasesReq &req, HydroPhasesRes &res)
+{
+    // Compute FFTs
+    std::vector<peripherals::hydro_fft> hydro_ffts;
+    if(!compute_fft(hydro_ffts))
+    {
+        ROS_ERROR("Failed to compute the FFT for hydro phases");
+        return false;
+    }
+
+    // For each channel, find the maximum phase
+    for(int i = 0; i < hydro_ffts.size(); i++)
+    {
+        // Find the frequency with the highest magnitude
+        int max_index = 0;
+        int max_magnitude = 0;
+        for(int j = 0; j < hydro_ffts[i].fft.size(); j++)
+        {
+            if(hydro_ffts[i].fft[j].magnitude > max_magnitude)
+            {
+                max_index = j;
+                max_magnitude = hydro_ffts[i].fft[j].magnitude;
+            }
+        }
+
+        // Find the phase at that magnitude
+        res.channel_phases.push_back(hydro_ffts[i].fft[max_index].phase);
+    }
+
+    return true;
+}
+
 bool hydrophones::get_raw_data(HydroDataReq &req, HydroDataRes &res)
 {       
     return acquire_hydro_data(res.hydro);
+}
+
+bool hydrophones::get_fft_data(HydroFFTsReq &req, HydroFFTsRes &res)
+{
+    return compute_fft(res.hydro_channel);
+}
+    
+bool hydrophones::compute_fft(std::vector<peripherals::hydro_fft> &hydro_ffts)
+{
+    // Acquire data from the hydrophones
+    std::vector<peripherals::hydro> hydro_data;
+    if(!this->acquire_hydro_data(hydro_data))
+    {
+        ROS_ERROR("Failed to acquire hydrophone data for FFT computation");
+        return false;
+    }
+   
+    // Compute the FFT of that data
+    hydro_ffts = std::vector<peripherals::hydro_fft>(hydro_data.size());
+    for(int i = 0; i < hydro_data.size(); i++)
+    {
+        // Copy hydrophone data into fft input buffer
+        std::copy(hydro_data[i].raw_data.begin(), hydro_data[i].raw_data.end(), this->fftw_inputs[i]);
+        fftw_execute(fftw_forward_plans[i]);
+
+        // Loop through data and convert from complex representation to polar representation
+        for(int j = 0; j < fft_size; j++)
+        {
+            // Compute magnitude and phase
+            constexpr double rad_to_deg = 180.0 / 3.14159265;
+            peripherals::polar_num fft_j;
+            fft_j.magnitude = sqrt(pow(fftw_outputs[i][j][REAL],2) + pow(fftw_outputs[i][j][IMAG],2));
+            fft_j.phase = atan2(fftw_outputs[i][j][IMAG], fftw_outputs[i][j][REAL]);
+
+            // Add magnitude and phase to the fft data for this channel
+            hydro_ffts[i].fft.push_back(fft_j);
+        }
+    }
+
+    return true;
 }
 
 bool hydrophones::acquire_hydro_data(std::vector<peripherals::hydro> &hydro_data)
@@ -226,6 +335,8 @@ int main(int argc, char** argv)
     hydrophones device(srv.response.device_fd.c_str());
 
     ros::ServiceServer raw_data_srv = nh.advertiseService("getRawData", &hydrophones::get_raw_data, &device);
+    ros::ServiceServer fft_data_srv = nh.advertiseService("getFFTData", &hydrophones::get_fft_data, &device);
+    ros::ServiceServer phase_data_srv = nh.advertiseService("getChannelPhases", &hydrophones::get_hydro_phases, &device);
         
     ros::spin();
 

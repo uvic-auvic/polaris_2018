@@ -22,6 +22,8 @@ add_service_files(
    avg_data.srv
    hydro_data.srv
    set_vel.srv
+   hydro_ffts.srv
+   hydro_phases.srv
    get_motor_enums.srv
 )
 
@@ -34,6 +36,8 @@ add_message_files(
   motor_enums.msg
   hydro.msg
   rpms.msg
+  polar_num.msg
+  hydro_fft.msg
 )
 
 ## Generate added messages and services with any dependencies listed here
@@ -74,7 +78,7 @@ target_link_libraries(imu ${catkin_LIBRARIES} ${serial_LIBRARIES} ${dsp_LIBRARIE
 add_dependencies(imu monitor_generate_messages_cpp peripherals_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 
 add_executable(hydrophones src/hydrophones.cpp)
-target_link_libraries(hydrophones ${catkin_LIBRARIES} ${serial_LIBRARIES})
+target_link_libraries(hydrophones -lfftw3 ${catkin_LIBRARIES} ${serial_LIBRARIES})
 add_dependencies(hydrophones monitor_generate_messages_cpp peripherals_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 
 #add_executable(exec_name src/file.cpp)
