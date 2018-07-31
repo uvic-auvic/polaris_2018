@@ -8,35 +8,36 @@ from inference import detector
 
 class image_classifier:
     def __init__(self):
-        # ROS handles
-        topic_name = "/video/%s" % rospy.get_param("~topic_name")
-        self.bridge = CvBridge()
-        self.sub = rospy.Subscriber(topic_name, Image, self.convert)
-        self.pub = rospy.Publisher("/video/detection", Image, queue_size=10)
         self.tf = detector()
-
         # internal state
         self.count = 0
-        self.disable = False
+        self.enable = True
 
-    def convert(self, img):
+        # ROS handles
+        self.bridge = CvBridge()
+        self.sub = rospy.Subscriber(rospy.get_param("~topic_name"), Image, self.classify)
+        self.pub = rospy.Publisher("/video/detection", Image, queue_size=10)
+
+
+    def classify(self, img):
         cv_image = self.bridge.imgmsg_to_cv2(img, "bgr8")
         # process 1/3 images
-        self.count += 1
-        if self.count % 3 == 0 or self.disable:
+        if not self.count and self.enable:
+            self.count += 1
+        else:
             self.count = 0
             return
 
         # scale the image down so that it is faster to process
-        height, _ = cv_image.shape
+        height = cv_image.shape[0]
         height_scaler = 300.0 / height
         rs_image = cv2.resize(cv_image, (0, 0), None, height_scaler, height_scaler)
-        rgb_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2RGB)
+        rgb_image = cv2.cvtColor(rs_image, cv2.COLOR_BGR2RGB)
 
         # Use tensorflow session to run detection
-        self.tf.detect()
+        self.tf.detect(rgb_image)
 
-        detected_image = cv2.cvtColor(cv_image, cv2.COLOR_RGB2BGR)
+        detected_img = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2BGR)
         it_img = self.bridge.cv2_to_imgmsg(detected_img, "bgr8")
         self.pub.publish(it_img)
 

@@ -17,7 +17,7 @@ class detector:
     def __init__(self):
         # Get paths
         VISION_PATH = os.path.join(os.path.dirname(__file__), '..')
-        TFWD_PATH = os.path.join(root_dir, 'tensorflow')
+        TFWD_PATH = os.path.join(VISION_PATH, 'tensorflow')
         PATH_TO_CKPT = os.path.join(TFWD_PATH,'frozen_inference_graph.pb')
         PATH_TO_LABELS = os.path.join(TFWD_PATH,'annotation.pbtxt')
         
@@ -29,6 +29,7 @@ class detector:
         # other settings
         self.max_objects = 5
         self.min_score_thresh = 0.99
+        self.line_thickness = 5;
 
         # Load the Tensorflow model into memory.
         detection_graph = tf.Graph()
@@ -52,9 +53,9 @@ class detector:
         frame_expanded = np.expand_dims(frame, axis=0)
 
         # Perform the actual detection by running the model with the image as input
-        (boxes, scores, classes, num) = sess.run(
+        (boxes, scores, classes, num) = self.sess.run(
             [self.db, self.ds, self.dc, self.nd],
-            feed_dict={image_tensor: frame_expanded})
+            feed_dict={self.it: frame_expanded})
 
         # Draw the results of the detection (aka 'visulaize the results')
         vis_util.visualize_boxes_and_labels_on_image_array(
@@ -62,19 +63,20 @@ class detector:
             np.squeeze(boxes),
             np.squeeze(classes).astype(np.int32),
             np.squeeze(scores),
-            category_index,
+            self.category_index,
             use_normalized_coordinates=True,
-            line_thickness=5,
+            line_thickness=self.line_thickness,
             min_score_thresh=self.min_score_thresh,
             max_boxes_to_draw=self.max_objects
         )
+
+        return
 
         # publish what we think we saw and the locations
         objects = list(zip(boxes, scores, classes))
         objects.sort(key=lambda x: x[1], reverse=true) # sort in ascending order
         recogniseable_objects = []
-        for i obj in enumerate(objects):
+        for i, obj in enumerate(objects):
             if obj[1] < self.min_score_thresh or i >= self.max_objects:
                 break
-            
-        return frame
+
