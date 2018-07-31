@@ -30,10 +30,6 @@ var imu = new ROSLIB.Topic({
     $('#angular_rate_y').text(message.angular_rate.y.toFixed(2));
     $('#angular_rate_z').text(message.angular_rate.z.toFixed(2));
 
-    $('#velocity_x').text(message.velocity.x.toFixed(2));
-    $('#velocity_y').text(message.velocity.y.toFixed(2));
-    $('#velocity_z').text(message.velocity.z.toFixed(2));
-
     $('#euler_angles_roll').text(message.euler_angles.roll.toFixed(2));
     $('#euler_angles_pitch').text(message.euler_angles.pitch.toFixed(2));
     $('#euler_angles_yaw').text(message.euler_angles.yaw.toFixed(2));

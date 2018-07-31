@@ -80,7 +80,7 @@
               </tr>
             </thead>
             <tbody>  
-              <tr>
+              <tr id="pb_batt_1_volt_row">
                 <td>Battery 1 Voltage</td>
                 <td>
                     <p>
@@ -88,7 +88,7 @@
                   </p>
                   </td>
               </tr>
-              <tr>
+              <tr id="pb_batt_2_volt_row">
                 <td>Battery 2 Voltage</td>
                 <td>
                     <p>
@@ -216,7 +216,13 @@
         <table class="table table-hover">
             <thead>
                 <tr>
-                  <th class="ros_topic_title"><h4>Power Board</h4></th>
+                  <th class="ros_topic_title">
+                    <h4>Power Board</h4>
+                  </th>
+                  <th>
+                    <button id="power_send"> Send</button>
+                    <!--<button id="power_get"> Get</button>-->
+                  </th>
                 </tr>
               </thead>
             <tbody id="system_settings">
@@ -335,14 +341,6 @@
                 </td>
               </tr>
               <tr>
-                <td>Velocity</td>
-                <td>
-                  <p> X: <span id="velocity_x"></span> <sup>m</sup>&frasl;<sub>s</sub> </p>
-                  <p> Y: <span id="velocity_y"></span> <sup>m</sup>&frasl;<sub>s</sub> </p>
-                  <p> Z: <span id="velocity_z"></span> <sup>m</sup>&frasl;<sub>s</sub> </p>
-                </td>
-              </tr>
-              <tr>
                 <td>Euler Angles</td>
                 <td>
                   <p> Roll:  <span id="euler_angles_roll"></span> &#176; </p>
@@ -387,7 +385,31 @@
               </tr>
             <tr>
           </table>
+          <h4>RPMS</h4>
+          <table class="table table-hover IMU_Data">
+            <thead>
+              <tr>
+                <th class="ros_topic_title">Motor</th>
+                <th>Actual RPM</th>
+                <th>Set RPM</th>
+              </tr>
+            </thead>
+            <tbody id="rpm-table-body">  
+            </tbody>
+          </table>
         </div>
+        <div class="col-lg-2">
+          <!--<h4>Power Board</h4>-->
+          <table class="table table-hover IMU_Data">
+            <thead>
+              <tr>
+                <th class="ros_topic_title"><h4>PWMS</h4></th>
+              </tr>
+            </thead>
+            <tbody id="pwm-table-body">  
+            </tbody>
+          </table>
+      </div>
         <div class="col-lg-2">
           <table class="table table-hover">
             <thead>
@@ -412,19 +434,100 @@
             </button>
           <table class="table table-hover">
             <thead>
-              <tr>
-                <th class="ros_topic_title"><h4>Depth Sensor</h4></th>
-              </tr>
+              
             </thead>
           </table>
-          <button id="depth_calibrate">
-            Calibrate Surface Pressure
-          </button>
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th class="ros_topic_title">Calibrate Depth Sensor</th>
+                <th>Offset</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th>
+                  <button id="depth_calibrate">
+                    Calibrate
+                  </button>
+                </th>
+                <th>
+                    <span id="depth_pressure_offset"></span> PSI
+                </th>
+              </tr>
+            </tbody>
+          </table>
+          <table>
+            <thead>
+              <tr></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td></td>
+                <td><div class="square y_thruster" id="Y_Front"></div></td>
+                <td></td>
+              </tr>
+              <tr>
+                <td><div class="circle" id="Z_Front_Left"></div></td>
+                <td></td>
+                <td><div class="circle" id="Z_Front_Right"></div></td>
+              </tr>
+              <tr>
+                  <td><div class="square x_thruster" id="X_Right"></div></td>
+                  <td></td>
+                  <td><div class="square x_thruster" id="X_Left"></div></td>
+              </tr>
+              <tr>
+                <td><div class="circle" id="Z_Back_Left"></div></td>
+                <td></td>
+                <td><div class="circle" id="Z_Back_Right"></div></td>
+              </tr>
+              <tr>
+                  <td></td>
+                  <td><div class="square y_thruster" id="Y_Back"></div></td>
+                  <td></td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
+      
   
 
 </body>
+
+<style>
+
+
+.y_thruster{
+  width: 50px;
+  height: 40px;
+}
+
+.x_thruster{
+  width: 40px;
+  height: 50px;
+  margin-left:auto;
+  margin-right:auto;
+  margin-bottom: 5px;
+  margin-top: 5px;
+}
+
+.square {
+  background: black;
+}
+
+.circle {
+  width: 50px;
+  height: 50px;
+  -webkit-border-radius: 25px;
+  -moz-border-radius: 25px;
+  border-radius: 25px;
+  background: black;
+  margin:0px;
+
+}
+</style>
 
 <script src="js/services/power_board_services.js" type="text/javascript" type="text/javascript"></script>
 <script src="js/services/imu_vector_reset.js" type="text/javascript" type="text/javascript"></script>
@@ -433,5 +536,7 @@
 <script src="js/topics/nav.js" type="text/javascript" type="text/javascript"></script>
 <script src="js/topics/imu.js" type="text/javascript" type="text/javascript"></script>
 <script src="js/topics/nav_velocity.js" type="text/javascript" type="text/javascript"></script>
-
+<script src="js/topics/power_board.js" type="text/javascript" type="text/javascript"></script>
+<script src="js/topics/update_rpms.js" type="text/javascript" type="text/javascript"></script>
+<script src="js/set_thruster.js" type="text/javascript" type="text/javascript"></script>
 </html>

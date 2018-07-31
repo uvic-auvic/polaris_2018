@@ -10,6 +10,8 @@ $("#depth_calibrate").click(function(){
         acq_count:100
     });
 
-    calibrate_depth.callService(request);
+    calibrate_depth.callService(request, function(message){
+        $("#depth_pressure_offset").text(message.avg_data);
+    });
 });
 

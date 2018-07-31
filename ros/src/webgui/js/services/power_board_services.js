@@ -4,7 +4,7 @@ var mc = new ROSLIB.Service({
     messageType : '/peripherals/power_enable'
 });
 
-$("#system_settings").click(function(){
+$("#power_send").click(function(){
     console.log("clicked");
     var motor_pwr_enable = document.getElementById('pb_mc_power').checked;
     var rail_5V_pwr_enable = document.getElementById('pb_5v').checked;

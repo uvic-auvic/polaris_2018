@@ -7,6 +7,7 @@
 #include "peripherals/motors.h"
 #include "peripherals/motor_enums.h"
 #include "peripherals/rpms.h"
+#include "peripherals/get_motor_enums.h"
 
 #define NUM_MOTORS (8)
 #define NUM_CHAR_PER_RPM (2)
@@ -18,6 +19,8 @@ using MotorReq = peripherals::motor::Request;
 using MotorRes = peripherals::motor::Response;
 using MotorsReq = peripherals::motors::Request;
 using MotorsRes = peripherals::motors::Response;
+using MotorEnumsReq = peripherals::get_motor_enums::Request;
+using MotorEnumsRes = peripherals::get_motor_enums::Response;
 using rosserv = ros::ServiceServer;
 
 class motor_controller {
@@ -29,6 +32,7 @@ public:
     bool stopMotor(MotorReq &req, MotorRes &res);
     bool stopAllMotors(MotorReq &, MotorRes &);
     bool getRPM(peripherals::rpms &rpms_msg);
+    bool getMotorEnums(MotorEnumsReq &req, MotorEnumsRes &res);
 
 private:
     std::unique_ptr<serial::Serial> connection = nullptr;
@@ -101,6 +105,18 @@ bool motor_controller::setAllMotorsPWM(MotorsReq &req, MotorsRes &res)
     return true;
 }
 
+bool motor_controller::getMotorEnums(MotorEnumsReq &req, MotorEnumsRes &res)
+{
+    res.motors.X_Right_idx = peripherals::motor_enums::X_Right - 1;
+    res.motors.X_Left_idx = peripherals::motor_enums::X_Left - 1;
+    res.motors.Y_Front_idx = peripherals::motor_enums::Y_Front - 1;
+    res.motors.Y_Back_idx = peripherals::motor_enums::Y_Back - 1;
+    res.motors.Z_Front_Left_idx = peripherals::motor_enums::Z_Front_Left - 1;
+    res.motors.Z_Front_Right_idx = peripherals::motor_enums::Z_Front_Right - 1;
+    res.motors.Z_Back_Left_idx = peripherals::motor_enums::Z_Back_Left - 1;
+    res.motors.Z_Back_Right_idx = peripherals::motor_enums::Z_Back_Right - 1;
+}
+
 bool motor_controller::stopMotor(MotorReq &req, MotorRes &res)
 {
     std::string out = "SM" + std::to_string(req.motor_num);
@@ -144,7 +160,7 @@ int main(int argc, char ** argv)
     ROS_INFO("Using Motor Controller on fd %s\n", srv.response.device_fd.c_str());
 
     motor_controller m(srv.response.device_fd);
-
+    
     ros::Publisher rpm_pub = nh.advertise<peripherals::rpms>("MotorsRPMs", 1);
 
     /* Setup all the Different services/commands which we  can call. Each service does its own error handling */
@@ -152,8 +168,12 @@ int main(int argc, char ** argv)
     rosserv stp = nh.advertiseService("stopAllMotors", &motor_controller::stopAllMotors, &m);
     rosserv sm  = nh.advertiseService("stopMotor", &motor_controller::stopMotor, &m);
     rosserv sam = nh.advertiseService("setAllMotorsPWM", &motor_controller::setAllMotorsPWM, &m);
+    rosserv enums = nh.advertiseService("getMotorEnums", &motor_controller::getMotorEnums, &m);
 
-    ros::Rate r(1);
+    int loop_rate;
+    nh.getParam("loop_rate", loop_rate);
+
+    ros::Rate r(loop_rate);
     while(ros::ok())
     {
         // Publish the RPMS to a topic
