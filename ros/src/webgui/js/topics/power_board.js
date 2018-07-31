@@ -33,5 +33,5 @@ function set_battery_voltage_background(id, volt)
     $('#pb_temperature').text(Math.round(message.temperature));
     $('#pb_rh').text(message.humidity);
     $('#pb_internal_pressure').text(Math.round(message.internal_pressure));
-    $('#pb_external_pressure').text((message.external_pressure/101325).toFixed(3));
+    $('#pb_external_pressure').text(message.external_pressure.toFixed(3));
   });

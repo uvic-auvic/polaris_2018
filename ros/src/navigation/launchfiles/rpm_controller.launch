@@ -1,10 +1,10 @@
 <launch>
     <!-- General Control System Parameters -->
-    <arg name="loop_rate" default="1.0"/>
+    <arg name="loop_rate" default="10.0"/>
     <arg name="min_rpm" default="0.0"/>
-    <arg name="max_rpm" default="5000.0"/>
-    <arg name="Kp" default="0.1"/>
-    <arg name="Ki" default="0.4"/>
+    <arg name="max_rpm" default="10000.0"/>
+    <arg name="Kp" default="0.01"/>
+    <arg name="Ki" default="0.04"/>
     <arg name="motor_count" default="8"/>
     
     <node name ="rpm_controller" pkg="navigation" type="rpm_controller" required="true">

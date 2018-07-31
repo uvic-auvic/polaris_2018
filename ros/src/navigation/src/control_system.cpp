@@ -8,6 +8,7 @@
 #include "peripherals/avg_data.h"
 #include "controllers.hpp"
 #include "geometry_msgs/Vector3.h"
+#include "median_filter.hpp"
 
 #define ATMOSPHERIC_PRESSURE (1E5)
 
@@ -38,6 +39,9 @@ private:
     velocity_controller* angular_vel_yw;
     velocity_controller* linear_vel_z;
 
+    // Filters
+    std::unique_ptr<filter_base> depth_filter;
+
     // Data
     navigation::nav_request::ConstPtr current_request;
     peripherals::imu::ConstPtr imu_data;
@@ -61,15 +65,16 @@ control_system::control_system():
     control_enables.pitch_enable = control_enables.roll_enable = control_enables.yaw_enable = true;
 
     // General Control System Parameters
-    double dt, min_lin_vel, max_lin_vel;
+    double loop_rate, min_lin_vel, max_lin_vel;
     double min_angl_vel, max_angl_vel, min_angl_pos, max_angl_pos;
-    nh.getParam("dt", dt);
+    nh.getParam("loop_rate", loop_rate);
     nh.getParam("min_linear_vel", min_lin_vel);
     nh.getParam("max_linear_vel", max_lin_vel);
     nh.getParam("min_angular_vel", min_angl_vel);
     nh.getParam("max_angular_vel", max_angl_vel);
     nh.getParam("min_angular_pos", min_angl_pos);
     nh.getParam("max_angular_pos", max_angl_pos);
+    double dt = 10.0 / loop_rate;
     
     // Veloctiy Z Control System
     double Kp_vel_z, Ki_vel_z;
@@ -101,6 +106,10 @@ control_system::control_system():
             min_angl_vel, max_angl_vel, min_angl_pos, max_angl_pos, dt, Kp_pos_r, Ki_pos_r, Kp_vel_r, Ki_vel_r);
     angular_vel_yw = new velocity_controller(min_angl_vel, max_angl_vel, dt, Kp_vel_yw, Ki_vel_yw);
     linear_vel_z = new velocity_controller(min_lin_vel, max_lin_vel, dt, Kp_vel_z, Ki_vel_z);
+
+    int depth_filter_size;
+    nh.getParam("depth_filter_size", depth_filter_size);
+    depth_filter = std::unique_ptr<filter_base>(new median_filter(depth_filter_size));
 }
 
 control_system::~control_system()
@@ -125,7 +134,9 @@ void control_system::receive_powerboard_data(const peripherals::powerboard::Cons
 {      
     // depth[m] = pressure[N/m^2] / (density[kg/m^3] * gravity[N/kg])
     constexpr float div = 997 * 9.81;
-    current_depth = (msg->external_pressure - surface_pressure) / div;
+    depth_filter->add_data((msg->external_pressure - surface_pressure) / div);
+    current_depth = depth_filter->get_result();
+    //current_depth = (msg->external_pressure - surface_pressure) / div;
 }
 
 bool control_system::calibrate_surface_depth(AvgDataReq &req, AvgDataRes &res)
@@ -200,7 +211,7 @@ void control_system::compute_output_vectors(navigation::nav &msg)
         }
         if(control_enables.yaw_enable)
         {
-            msg.orientation.yaw = angular_vel_yw->calculate(current_request->yaw_rate, imu_data->compensated_angular_rate.z);
+            msg.orientation.yaw = angular_vel_yw->calculate(current_request->yaw_rate, imu_data->angular_rate.z);
         }
     }
     else

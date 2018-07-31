@@ -3,7 +3,7 @@
     <arg name="topic_name" default="imu_sensor"/>
     <arg name="topic_buffer_size" default="10"/>
     <arg name="device_id" default="imu"/>
-    <arg name="publish_rate" default="10"/>
+    <arg name="publish_rate" default="30"/>
     <arg name="accel_filter_loc" default="$(find peripherals)/csv/lowpass.csv"/>
     <arg name="vel_filter_loc" default="$(find peripherals)/csv/bandstop_tested.csv"/>
 

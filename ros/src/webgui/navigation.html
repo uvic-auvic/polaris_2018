@@ -116,7 +116,7 @@
               <td>Internal Pressure</td>
               <td>
                 <p>
-                <span id="pb_internal_pressure"></span> PSI
+                <span id="pb_internal_pressure"></span> Pa
               </p>
               </td>
             </tr>
@@ -124,7 +124,7 @@
               <td>External Pressure</td>
               <td>
                 <p>
-                <span id="pb_external_pressure"></span> PSI
+                <span id="pb_external_pressure"></span> Pa
               </p>
               </td>
             </tr>
@@ -146,10 +146,18 @@
             </tr>
           </tbody>
         </table>
+        
         <table class="table table-hover"> 
             <thead>
               <tr>
-                <th class="ros_topic_title"><h4>Nav Request</h4></th>
+                <th><h4>Nav Request</h4></th>
+                <th><button id="send_manual_nav">Send</button></th>
+                <th><button id="reset_nav">Reset</button></th>
+              </tr>
+              <tr>
+                <th class="ros_topic_title">Field </th>
+                <th>Current</th>
+                <th>Set</th>
               </tr>
             </thead>
             <tbody>
@@ -160,6 +168,9 @@
                   <span id="nav_depth"></span> m
                 </p>
                 </td>
+                <td style="width:50%;">
+                  <input style="margin:0px; width:50%;" id="depth_nav" type="text" class="form-control" placeholder="Depth"/>
+                </td>
               </tr>
               <tr>
                 <td>Yaw Rate</td>
@@ -168,13 +179,19 @@
                     <span id="yaw_rate"></span> <sup>&#176;</sup>&frasl;<sub>m</sub>
                   </p>
                   </td>
+                <td style="width:50%;">
+                    <input style="margin:0px; width:50%;" id="yaw_nav" type="text" class="form-control" placeholder="Yaw"/>
+                </td>
               </tr>
               <tr>
                 <td>Forward Velocity</td>
                 <td>
                   <p>
-                  <span id="forward_velocity"></span> <sup>m</sup>&frasl;<sub>s</sub>
+                  <span  id="forward_velocity"></span> <sup>m</sup>&frasl;<sub>s</sub>
                 </p>
+                </td>
+                <td style="width:50%;">
+                    <input style="margin:0px; width:50%;" id="x_nav" type="text" class="form-control" placeholder="X"/>
                 </td>
               </tr>
               <tr>
@@ -183,6 +200,9 @@
                   <p>
                   <span id="sideways_velocity"></span> <sup>m</sup>&frasl;<sub>s</sub>
                 </p>
+                </td>
+                <td style="width:50%;">
+                    <input style="margin:0px; width:50%;" id="y_nav" type="text" class="form-control" placeholder="Y"/>
                 </td>
               </tr>
             </tbody>
@@ -331,6 +351,14 @@
                   <p> Y: <span id="acceleration_y"></span> <sup>m</sup>&frasl;<sub>s<sup>2</sup></sub></p>
                   <p> Z: <span id="acceleration_z"></span> <sup>m</sup>&frasl;<sub>s<sup>2</sup></sub></p>
                 </td>
+              </tr>  
+              <tr>
+                <td>Compensated Angular Rate</td>
+                <td>
+                  <p> X: <span id="compensated_angular_rate_x"></span> <sup>&#176;</sup>&frasl;<sub>m</sub> </p>
+                  <p> Y: <span id="compensated_angular_rate_y"></span> <sup>&#176;</sup>&frasl;<sub>m</sub> </p>
+                  <p> Z: <span id="compensated_angular_rate_z"></span> <sup>&#176;</sup>&frasl;<sub>m</sub> </p>
+                </td>
               </tr>
               <tr>
                 <td>Angular Rate</td>
@@ -355,6 +383,21 @@
                     <span id="imu_temp"></span> &#8451;
                   </p>
                 </td>
+              </tr>
+            </tbody>
+          </table>
+          <h4>Depth Message</h4>
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <td>Desired</td>
+                <td>Actual</td>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span id="desired_depth"></span></td>
+                <td><span id="current_depth"></span></td>
               </tr>
             </tbody>
           </table>
@@ -457,38 +500,47 @@
               </tr>
             </tbody>
           </table>
-          <table style="margin:auto;">
-            <thead>
-              <tr></tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td></td>
-                <td><div class="square y_thruster" id="Y_Front"></div></td>
-                <td></td>
-              </tr>
-              <tr>
-                <td><div class="circle" id="Z_Front_Left"></div></td>
-                <td></td>
-                <td><div class="circle" id="Z_Front_Right"></div></td>
-              </tr>
-              <tr>
-                  <td><div class="square x_thruster" id="X_Right"></div></td>
+          <div>
+          <select id="select-graphic">
+            <option id="rpm-actual">RPMs Actual</option>
+            <option id="rpm-set-point">RPMs Set Point</option>
+            <option id="pwm-current">PWM</option>
+          </select>
+          </div>
+          <div>
+            <table style="margin:auto;">
+              <thead>
+                <tr></tr>
+              </thead>
+              <tbody>
+                <tr>
                   <td></td>
-                  <td><div class="square x_thruster" id="X_Left"></div></td>
-              </tr>
-              <tr>
-                <td><div class="circle" id="Z_Back_Left"></div></td>
-                <td></td>
-                <td><div class="circle" id="Z_Back_Right"></div></td>
-              </tr>
-              <tr>
+                  <td><div class="square y_thruster" id="Y_Front"></div></td>
                   <td></td>
-                  <td><div class="square y_thruster" id="Y_Back"></div></td>
+                </tr>
+                <tr>
+                  <td><div class="circle" id="Z_Front_Left"></div></td>
                   <td></td>
-              </tr>
-            </tbody>
-          </table>
+                  <td><div class="circle" id="Z_Front_Right"></div></td>
+                </tr>
+                <tr>
+                    <td><div class="square x_thruster" id="X_Right"></div></td>
+                    <td></td>
+                    <td><div class="square x_thruster" id="X_Left"></div></td>
+                </tr>
+                <tr>
+                  <td><div class="circle" id="Z_Back_Left"></div></td>
+                  <td></td>
+                  <td><div class="circle" id="Z_Back_Right"></div></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td><div class="square y_thruster" id="Y_Back"></div></td>
+                    <td></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
       
@@ -540,5 +592,8 @@
 <script src="js/topics/nav_velocity.js" type="text/javascript" type="text/javascript"></script>
 <script src="js/topics/power_board.js" type="text/javascript" type="text/javascript"></script>
 <script src="js/topics/update_rpms.js" type="text/javascript" type="text/javascript"></script>
+<script src="js/topics/update_pwms.js" type="text/javascript" type="text/javascript"></script>
 <script src="js/set_thruster.js" type="text/javascript" type="text/javascript"></script>
+<script src="js/topics/depth.js" type="text/javascript" type="text/javascript"></script>
+<script src="js/topics/send_nav.js" type="text/javascript" type="text/javascript"></script>
 </html>

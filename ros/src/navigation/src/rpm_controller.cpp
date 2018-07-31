@@ -13,15 +13,6 @@
 #define MAX_REVERSE_PWM         (300)
 #define MIN_REVERSE_PWM         (100)
 
-#define X_LEFT_MULT             (-1)
-#define X_RIGHT_MULT            (-1)
-#define Y_FRONT_MULT            (1)
-#define Y_BACK_MULT             (-1)
-#define Z_FRONT_RIGHT_MULT      (-1)
-#define Z_FRONT_LEFT_MULT       (1)
-#define Z_BACK_RIGHT_MULT       (-1)
-#define Z_BACK_LEFT_MULT        (1)
-
 using RpmCtrlEnReq = navigation::rpm_control_en::Request;
 using RpmCtrlEnRes = navigation::rpm_control_en::Response;
 
@@ -45,10 +36,10 @@ private:
     // Messages
     std::vector<double> current_rpm_des;
     std::vector<double> current_rpm_act;
+    std::vector<double> previous_rpm_des;
 
     // Variables
     std::vector<int16_t> pwms;
-    std::vector<int16_t> pwm_multipliers;
     bool control_sys_en;
 };
 
@@ -56,9 +47,9 @@ rpm_controller::rpm_controller():
     nh(ros::NodeHandle("~")),
     current_rpm_des(NUM_MOTORS),
     current_rpm_act(NUM_MOTORS),
+    previous_rpm_des(NUM_MOTORS),
     pwms(NUM_MOTORS),
-    pwm_multipliers(NUM_MOTORS),
-    control_sys_en(true)
+    control_sys_en(false)
 {
     double loop_rate, min_rpm, max_rpm, Kp, Ki;
     nh.getParam("loop_rate", loop_rate);
@@ -71,15 +62,6 @@ rpm_controller::rpm_controller():
     {
         thruster_controllers.push_back(std::unique_ptr<velocity_controller>(new velocity_controller(min_rpm, max_rpm, 1.0/loop_rate, Kp, Ki)));
     }
-
-    pwm_multipliers[peripherals::motor_enums::X_Right - 1] = X_RIGHT_MULT;
-    pwm_multipliers[peripherals::motor_enums::X_Left - 1] = X_LEFT_MULT;
-    pwm_multipliers[peripherals::motor_enums::Y_Front - 1] = Y_FRONT_MULT;
-    pwm_multipliers[peripherals::motor_enums::Y_Back - 1] = Y_BACK_MULT;
-    pwm_multipliers[peripherals::motor_enums::Z_Front_Right - 1] = Z_FRONT_RIGHT_MULT;
-    pwm_multipliers[peripherals::motor_enums::Z_Front_Left - 1] = Z_FRONT_LEFT_MULT;
-    pwm_multipliers[peripherals::motor_enums::Z_Back_Right - 1] = Z_BACK_RIGHT_MULT;
-    pwm_multipliers[peripherals::motor_enums::Z_Back_Left - 1] = Z_BACK_LEFT_MULT;
 }
 
 int16_t rpm_controller::rpm_to_pwm(double rpm)
@@ -126,16 +108,19 @@ void rpm_controller::compute_pwms(peripherals::motors &srv)
         if(control_sys_en)
         {
             // Determine the sign of the motor controller returned RPM
-            double signed_rpm_act = (this->pwms[i] < 0) ? (-this->current_rpm_act[i]) : (this->current_rpm_act[i]);
-            corrected_rpm = this->thruster_controllers[i]->calculate(this->current_rpm_des[i], signed_rpm_act);
+            double signed_rpm_des = (this->current_rpm_des[i] < 0) ? (-this->current_rpm_des[i]) : (this->current_rpm_des[i]);
+            corrected_rpm = this->thruster_controllers[i]->calculate(signed_rpm_des, this->current_rpm_act[i]);
+            corrected_rpm = (this->current_rpm_des[i] < 0) ? (-corrected_rpm) : (corrected_rpm);
         }
         else
         {
             corrected_rpm = this->current_rpm_des[i];
         }
 
+        this->previous_rpm_des[i] = corrected_rpm;
+
         // Determine the desired PWM to achieve that RPM
-        this->pwms[i] = this->pwm_multipliers[i] * this->rpm_to_pwm(corrected_rpm);
+        this->pwms[i] = this->rpm_to_pwm(corrected_rpm);
     }
 
     // Prepare service request
@@ -175,7 +160,7 @@ int main(int argc, char** argv) {
     ros::NodeHandle nh("~");
     rpm_controller rpm_ctrl;
     ros::Subscriber des_rpms = nh.subscribe<peripherals::rpms>("/nav/rpms", 1, &rpm_controller::receive_desired_rpms, &rpm_ctrl);
-    ros::Subscriber act_rpms = nh.subscribe<peripherals::rpms>("/motor_controller/MotorRpms", 1, &rpm_controller::receive_actual_rpms, &rpm_ctrl);
+    ros::Subscriber act_rpms = nh.subscribe<peripherals::rpms>("/motor_controller/MotorsRPMs", 1, &rpm_controller::receive_actual_rpms, &rpm_ctrl);
     ros::ServiceClient mtrs_set_all = nh.serviceClient<peripherals::motors>("/motor_controller/setAllMotorsPWM");
     ros::ServiceServer control_en = nh.advertiseService("/nav/rpm_cntrl_en", &rpm_controller::control_en, &rpm_ctrl);
     ros::Publisher pub_pwms = nh.advertise<navigation::thrusts>("/rpm_control/pwms", 5);

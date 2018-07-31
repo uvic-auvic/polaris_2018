@@ -1,4 +1,5 @@
 #include <ros/ros.h>
+#include <vector>
 #include <string>
 #include <memory>
 #include <serial/serial.h>
@@ -14,6 +15,15 @@
 #define NUM_CHAR_PER_PWM (2)
 #define NUM_CHAR_PER_DIR (1)
 #define MAX_MOTOR_VALUE (999)
+
+#define X_LEFT_MULT             (-1)
+#define X_RIGHT_MULT            (1.35)
+#define Y_FRONT_MULT            (1)
+#define Y_BACK_MULT             (-1)
+#define Z_FRONT_RIGHT_MULT      (1)
+#define Z_FRONT_LEFT_MULT       (1)
+#define Z_BACK_RIGHT_MULT       (-1)
+#define Z_BACK_LEFT_MULT        (1)
 
 using MotorReq = peripherals::motor::Request;
 using MotorRes = peripherals::motor::Response;
@@ -36,14 +46,24 @@ public:
 
 private:
     std::unique_ptr<serial::Serial> connection = nullptr;
+    std::vector<double> pwm_multipliers;
     std::string write(const std::string & out, bool ignore_response = true, std::string eol = "\n");
 };
 
-motor_controller::motor_controller(const std::string & port, int baud_rate, int timeout) {
+motor_controller::motor_controller(const std::string & port, int baud_rate, int timeout) :
+        pwm_multipliers(NUM_MOTORS)
+{
     ROS_INFO("Connecting to motor_controller on port: %s", port.c_str());
     connection = std::unique_ptr<serial::Serial>(new serial::Serial(port, (u_int32_t) baud_rate, serial::Timeout::simpleTimeout(timeout)));
 
-    peripherals::motor_enums motor_defs;
+    pwm_multipliers[peripherals::motor_enums::X_Right - 1] = X_RIGHT_MULT;
+    pwm_multipliers[peripherals::motor_enums::X_Left - 1] = X_LEFT_MULT;
+    pwm_multipliers[peripherals::motor_enums::Y_Front - 1] = Y_FRONT_MULT;
+    pwm_multipliers[peripherals::motor_enums::Y_Back - 1] = Y_BACK_MULT;
+    pwm_multipliers[peripherals::motor_enums::Z_Front_Right - 1] = Z_FRONT_RIGHT_MULT;
+    pwm_multipliers[peripherals::motor_enums::Z_Front_Left - 1] = Z_FRONT_LEFT_MULT;
+    pwm_multipliers[peripherals::motor_enums::Z_Back_Right - 1] = Z_BACK_RIGHT_MULT;
+    pwm_multipliers[peripherals::motor_enums::Z_Back_Left - 1] = Z_BACK_LEFT_MULT;
 }
 
 motor_controller::~motor_controller() {
@@ -64,7 +84,7 @@ std::string motor_controller::write(const std::string & out, bool ignore_respons
 
 bool motor_controller::setMotorPWM(MotorReq &req, MotorRes &res)
 {
-    int16_t pwm = req.pwm;
+    int16_t pwm = pwm_multipliers[req.motor_num - 1] * req.pwm;
     std::string out = "M" + std::to_string(req.motor_num);
     std::string dir = "F";
     if(pwm < 0) {
@@ -86,11 +106,12 @@ bool motor_controller::setAllMotorsPWM(MotorsReq &req, MotorsRes &res)
 {
     char motor_num = '1';
     std::string out = "MSA";
-    for (auto pwm : req.pwms) {
+    for (int i = 0; i < req.pwms.size(); i++) {
+        int16_t pwm = pwm_multipliers[i] * req.pwms[i];
         char dir = 'F';
         if (pwm < 0) {
             dir = 'R';
-            pwm *= -1;
+            pwm = -pwm;
         }
         if (pwm > MAX_MOTOR_VALUE) {
             pwm = MAX_MOTOR_VALUE;
@@ -178,8 +199,10 @@ int main(int argc, char ** argv)
     {
         // Publish the RPMS to a topic
         peripherals::rpms rpms_msg;
-        m.getRPM(rpms_msg);
-        rpm_pub.publish(rpms_msg);
+        if(m.getRPM(rpms_msg))
+        {
+            rpm_pub.publish(rpms_msg);
+        }
 
         ros::spinOnce();
         r.sleep();

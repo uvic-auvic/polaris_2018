@@ -54,12 +54,12 @@ private:
     bool verify_response(int response_bytes);
 
     ros::NodeHandle nh;
-    std::unique_ptr<fir_filter> accel_x_filter;
-    std::unique_ptr<fir_filter> accel_y_filter;
-    std::unique_ptr<fir_filter> accel_z_filter;
-    std::unique_ptr<fir_filter> dvel_x_filter;
-    std::unique_ptr<fir_filter> dvel_y_filter;
-    std::unique_ptr<fir_filter> dvel_z_filter;
+    std::unique_ptr<filter_base> accel_x_filter;
+    std::unique_ptr<filter_base> accel_y_filter;
+    std::unique_ptr<filter_base> accel_z_filter;
+    std::unique_ptr<filter_base> dvel_x_filter;
+    std::unique_ptr<filter_base> dvel_y_filter;
+    std::unique_ptr<filter_base> dvel_z_filter;
     std::unique_ptr<serial::Serial> connection = nullptr;
     uint8_t * response_buffer = nullptr;
     double mag_gain_scale = 1;
@@ -89,16 +89,16 @@ imu::imu(const std::string & port, int baud_rate, int timeout) :
     // MATLAB: low_pass_filter = designfilt('lowpassfir', 'FilterOrder', 7, 'CutoffFrequency', 0.5)
     std::string accel_filter_loc;
     nh.getParam("accel_filter_loc", accel_filter_loc);
-    accel_x_filter = std::unique_ptr<fir_filter>(new fir_filter(accel_filter_loc));
-    accel_y_filter = std::unique_ptr<fir_filter>(new fir_filter(accel_filter_loc));
-    accel_z_filter = std::unique_ptr<fir_filter>(new fir_filter(accel_filter_loc));
+    accel_x_filter = std::unique_ptr<filter_base>(new fir_filter(accel_filter_loc));
+    accel_y_filter = std::unique_ptr<filter_base>(new fir_filter(accel_filter_loc));
+    accel_z_filter = std::unique_ptr<filter_base>(new fir_filter(accel_filter_loc));
 
     // MATLAB: highpass_filter = designfilt('highpassfir', 'FilterOrder', 9, 'CutoffFrequency', 0.05)
     std::string vel_filter_loc;
     nh.getParam("vel_filter_loc", vel_filter_loc);
-    dvel_x_filter = std::unique_ptr<fir_filter>(new fir_filter(vel_filter_loc));
-    dvel_y_filter = std::unique_ptr<fir_filter>(new fir_filter(vel_filter_loc));
-    dvel_z_filter = std::unique_ptr<fir_filter>(new fir_filter(vel_filter_loc));
+    dvel_x_filter = std::unique_ptr<filter_base>(new fir_filter(vel_filter_loc));
+    dvel_y_filter = std::unique_ptr<filter_base>(new fir_filter(vel_filter_loc));
+    dvel_z_filter = std::unique_ptr<filter_base>(new fir_filter(vel_filter_loc));
 
     ROS_INFO("Connecting to imu on port: %s", port.c_str());
     connection = std::unique_ptr<serial::Serial>(new serial::Serial(port, (u_int32_t) baud_rate, serial::Timeout::simpleTimeout(timeout)));
@@ -240,7 +240,7 @@ bool imu::get_mag_accel_gyro_stable
     // Get gyroscope vector (rad/sec)
     gyro.x = ((int16_t)((response_buffer[13] << 8) | response_buffer[14])) * gyro_gain_scale / 32768000.0;
     gyro.y = ((int16_t)((response_buffer[15] << 8) | response_buffer[16])) * gyro_gain_scale / 32768000.0;
-    gyro.z = ((int16_t)((response_buffer[17] << 8) | response_buffer[17])) * gyro_gain_scale / 32768000.0;
+    gyro.z = 180 * ((int16_t)((response_buffer[17] << 8) | response_buffer[17])) * gyro_gain_scale / 32768000.0;
 
     // Get timestamp (ms)
     time = ((uint16_t)((response_buffer[19] << 8) | response_buffer[20])) * 6.5536;
@@ -278,7 +278,7 @@ bool imu::get_mag_accel_gyro
     // Get gyroscope vector (rad/sec)
     gyro.x = ((int16_t)((response_buffer[13] << 8) | response_buffer[14])) * gyro_gain_scale / 32768000.0;
     gyro.y = ((int16_t)((response_buffer[15] << 8) | response_buffer[16])) * gyro_gain_scale / 32768000.0;
-    gyro.z = ((int16_t)((response_buffer[17] << 8) | response_buffer[17])) * gyro_gain_scale / 32768000.0;
+    gyro.z = 180 * ((int16_t)((response_buffer[17] << 8) | response_buffer[17])) * gyro_gain_scale / 32768000.0;
 
     // Get timestamp (ms)
     time = ((uint16_t)((response_buffer[19] << 8) | response_buffer[20])) * 6.5536;

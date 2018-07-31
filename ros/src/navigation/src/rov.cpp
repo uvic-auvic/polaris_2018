@@ -80,7 +80,7 @@ void rov_mapper::recieve_joystick(const navigation::joystick::ConstPtr& msg) {
     // Joystick axes go from [-100 100]. We want to go from [-max_speed max_speed]
     nav_msg.sideways_velocity = (max_speed_ms * (double)msg->axes[0]) / 100.0;
     nav_msg.forwards_velocity = -(max_speed_ms * (double)msg->axes[1]) / 100.0;
-    nav_msg.yaw_rate = (max_yaw_rate_degs * (double)msg->axes[2]) / 100.0;
+    nav_msg.yaw_rate = -(max_yaw_rate_degs * (double)msg->axes[2]) / 100.0;
 
     // set motor to stop
     nav_pub.publish(nav_msg);

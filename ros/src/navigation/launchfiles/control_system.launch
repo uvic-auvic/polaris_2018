@@ -2,7 +2,7 @@
     <!-- General Control System Parameters -->
     <arg name="loop_rate" default="10.0"/>
     <arg name="loops_per_param_update" default="10"/>
-    <arg name="dt" default="1.0"/>
+    <arg name="depth_filter_size" default="5"/>
     <arg name="min_linear_vel" default="-5.0"/>
     <arg name="max_linear_vel" default="5.0"/>
     <arg name="min_angular_vel" default="-180.0"/>
@@ -15,25 +15,24 @@
     <arg name="Ki_vel_z" default="0.2"/>
 
     <!-- Position Pitch Control System -->
-    <arg name="Kp_pos_p" default="3"/>
-    <arg name="Ki_pos_p" default="3"/>
-    <arg name="Kp_vel_p" default="0.01"/>
-    <arg name="Ki_vel_p" default="0.05"/>
+    <arg name="Kp_pos_p" default="15"/>
+    <arg name="Ki_pos_p" default="15"/>
+    <arg name="Kp_vel_p" default="0.05"/>
+    <arg name="Ki_vel_p" default="0.005"/>
 
     <!-- Position Roll Control System -->
-    <arg name="Kp_pos_r" default="3"/>
-    <arg name="Ki_pos_r" default="3"/>
+    <arg name="Kp_pos_r" default="15"/>
+    <arg name="Ki_pos_r" default="15"/>
     <arg name="Kp_vel_r" default="0.01"/>
-    <arg name="Ki_vel_r" default="0.05"/>
+    <arg name="Ki_vel_r" default="0.002"/>
     
     <!-- Velocity Yaw Control System -->
-    <arg name="Kp_vel_yw" default="1"/>
-    <arg name="Ki_vel_yw" default="2"/>
+    <arg name="Kp_vel_yw" default="0.85"/>
+    <arg name="Ki_vel_yw" default="0.038"/>
     
     <node name ="control_system" pkg="navigation" type="control_system" required="true">
         <param name="loop_rate" value="$(arg loop_rate)"/>
         <param name="loops_per_param_update" value="$(arg loops_per_param_update)"/>
-        <param name="dt" value="$(arg dt)"/>
         <param name="min_linear_vel" value="$(arg min_linear_vel)"/>
         <param name="max_linear_vel" value="$(arg max_linear_vel)"/>
         <param name="min_angular_vel" value="$(arg min_angular_vel)"/>

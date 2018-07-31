@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   peripherals
+  dsp
   geometry_msgs
 )
 
@@ -49,7 +50,7 @@ catkin_package(
 include_directories(
   include 
   ${catkin_INCLUDE_DIRS}
-  
+  ${dsp_INCLUDE_DIRS}
 )
 
 add_executable(rov src/rov.cpp)
@@ -61,7 +62,7 @@ target_link_libraries(thrustmap ${catkin_LIBRARIES})
 add_dependencies(thrustmap navigation_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 
 add_executable(control_system src/control_system.cpp src/controllers.cpp src/controllers.hpp src/pid.cpp src/pid.h)
-target_link_libraries(control_system ${catkin_LIBRARIES})
+target_link_libraries(control_system ${catkin_LIBRARIES} ${dsp_LIBRARIES})
 add_dependencies(control_system navigation_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 
 add_executable(rpm_controller src/rpm_controller.cpp src/controllers.cpp src/controllers.hpp src/pid.cpp src/pid.h)

@@ -6,7 +6,9 @@
 #include <deque>
 #include <vector>
 
-class fir_filter{
+#include "filter_base.hpp"
+
+class fir_filter : public filter_base {
 public:
     fir_filter(std::vector<double> filter_coefficients);
     fir_filter(double* filter_coefficients, uint8_t filter_length);
