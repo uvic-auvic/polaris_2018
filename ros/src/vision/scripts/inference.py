@@ -5,10 +5,19 @@ import tensorflow as tf
 import label_map_util
 import visualization_utils as vis_util
 
+class objects:
+    def __init__(self, class_name="-", pos_z=0.0, pos_y=0.0, pos_x=0.0):
+        self.class_name = class_name
+        self.pos_z = pos_z
+        self.pos_y = pos_y
+        self.pos_x = pos_x
+
+
 class detector:
     def __init__(self):
         # Get paths
-        TFWD_PATH = os.path.join(os.path.dirname(__file__), 'tf')
+        VISION_PATH = os.path.join(os.path.dirname(__file__), '..')
+        TFWD_PATH = os.path.join(root_dir, 'tensorflow')
         PATH_TO_CKPT = os.path.join(TFWD_PATH,'frozen_inference_graph.pb')
         PATH_TO_LABELS = os.path.join(TFWD_PATH,'annotation.pbtxt')
         
@@ -16,6 +25,10 @@ class detector:
         label_map = label_map_util.load_labelmap(PATH_TO_LABELS)
         categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes=3, use_display_name=True)
         self.category_index = label_map_util.create_category_index(categories)
+
+        # other settings
+        self.max_objects = 5
+        self.min_score_thresh = 0.99
 
         # Load the Tensorflow model into memory.
         detection_graph = tf.Graph()
@@ -52,7 +65,16 @@ class detector:
             category_index,
             use_normalized_coordinates=True,
             line_thickness=5,
-            min_score_thresh=0.95)
+            min_score_thresh=self.min_score_thresh,
+            max_boxes_to_draw=self.max_objects
+        )
 
-        # publish what we think we saw
+        # publish what we think we saw and the locations
+        objects = list(zip(boxes, scores, classes))
+        objects.sort(key=lambda x: x[1], reverse=true) # sort in ascending order
+        recogniseable_objects = []
+        for i obj in enumerate(objects):
+            if obj[1] < self.min_score_thresh or i >= self.max_objects:
+                break
+            
         return frame
