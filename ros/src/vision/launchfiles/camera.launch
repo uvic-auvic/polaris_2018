@@ -6,7 +6,8 @@
         <arg name="topic_name" default="top_face_cam"/>
         <arg name="fps" default="10"/>
         <arg name="fd" default="/dev/video0"/>
-	
+
+        <node name="rosbag" pkg="record" type="record" args="-o /home/nvidia/ -e /video/$(arg topic_name)">
         <node name="$(arg node_name)" pkg="vision" type="sender" required="true">
           <param name="name" value="$(arg topic_name)"/>
           <param name="fps" value="$(arg fps)"/>

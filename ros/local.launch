@@ -9,12 +9,12 @@
 
     <!-- Included include files -->
     <include file="$(find webgui)/webgui.launch"/>
-    <!--include file="$(find vision)/launchfiles/camera.launch">
+    <include file="$(find vision)/launchfiles/camera.launch">
         <arg name="node_name" value="front_camera"/>
         <arg name="topic_name" value="front_camera"/>
         <arg name="fps" value="1"/>
         <arg name="fd" value="/dev/video1"/>
-    </include-->
+    </include>
     <!--include file="$(find vision)/launchfiles/camera.launch">
         <arg name="node_name" value="bottom_camera"/>
         <arg name="topic_name" value="bottom_camera"/>
@@ -46,6 +46,6 @@
     </include-->
 
     <group if="$(arg record)">
-        <node name="rosbag" pkg="rosbag" type="record"  args="-o $(arg save_location) -a"/> 
+        <node name="rosbag" pkg="rosbag" type="record"  args="-a"/> 
     </group> 
 </launch>
