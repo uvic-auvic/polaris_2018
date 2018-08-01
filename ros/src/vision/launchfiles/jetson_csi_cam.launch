@@ -4,9 +4,12 @@
   <arg name="topic_name" default="csi_cam"/>
   <arg name="frame_id" default="/$(arg cam_name)_link" />    <!-- The TF frame ID. -->
   <arg name="sync_sink" default="true" />                    <!-- Synchronize the app sink. Setting this to false may resolve problems with sub-par framerates. -->
-  <arg name="width" default="1920" />                        <!-- Image Width -->
-  <arg name="height" default="1080" />                       <!-- Image Height -->
-  <arg name="fps" default="10" />                            <!-- Desired framerate. True framerate may not reach this if set too high. -->
+  <arg name="width" default="400" />                        <!-- Image Width -->
+  <arg name="height" default="300" />                       <!-- Image Height -->
+  <arg name="fps" default="1" />                            <!-- Desired framerate. True framerate may not reach this if set too high. -->
+  <!--Ros Recording-->
+  <arg name="record" default="false"/>
+  <arg name="save_location" default="$(env HOME)/rosbag/$(arg topic_name)_"/> 
 
   <!-- Make arguments available to parameter server -->
   <param name="$(arg cam_name)/image_width" type="int" value="$(arg width)" />
@@ -17,6 +20,10 @@
   <env name="GSCAM_CONFIG" value="nvcamerasrc ! video/x-raw(memory:NVMM),
     width=(int)$(arg width), height=(int)$(arg height), format=(string)I420, framerate=(fraction)$(arg fps)/1 ! 
     nvvidconv flip-method=0 ! video/x-raw, format=(string)BGRx ! videoconvert ! video/x-raw, format=(string)BGR" />
+
+  <group if="$(arg record)">
+    <node name="rosbag_$(arg node_name)" pkg="rosbag" type="record" args="-e /video/$(arg topic_name)$ -o $(arg save_location)"/>
+  </group>
 
   <!-- Start the GSCAM node -->
   <node pkg="gscam" type="gscam" name="$(arg cam_name)">
