@@ -3,7 +3,7 @@
   <name>webgui</name>
   <version>0.0.0</version>
   <description>The gui package</description>
-  <maintainer email="asinha@todo.todo">asinha</maintainer>
+  <maintainer email="asinha@uvic.ca">asinha</maintainer>
   <license>TODO</license>
 
   <buildtool_depend>catkin</buildtool_depend>

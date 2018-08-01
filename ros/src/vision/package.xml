@@ -3,7 +3,7 @@
   <name>vision</name>
   <version>0.1.0</version>
   <description>Vision core of RedHerring</description>
-  <maintainer email="asinha@uvic.ca">AUVIC</maintainer>
+  <maintainer email="asinha@uvic.ca">asinha</maintainer>
   <license>BSD</license>
   
   <!-- The tools that we need for compiling -->

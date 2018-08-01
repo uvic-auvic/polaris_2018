@@ -1,0 +1,10 @@
+<launch>
+     <arg name="poll_delay" default="1"/>
+     <arg name="start_delay" default="10"/>
+
+    <node name="ai_master" pkg="ai" type="master" required="false">
+        <param name="can_start" value="false"/>
+        <param name="start_delay" value="$(arg start_delay)"/>
+        <param name="poll_delay" value="$(arg poll_delay)"/>
+    </node>
+</launch>
