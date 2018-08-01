@@ -33,7 +33,7 @@ int main (int argc, char ** argv)
 
     uint8_t video_index = (uint8_t)fd.back();
     
-    cv::VideoCapture source(video_index);
+    cv::VideoCapture source(video_index - '0');
     if (!source.isOpened()) {
         ROS_ERROR("%s failed to open device on %s", name.c_str(), fd.c_str());
         return -1;

@@ -1,0 +1,18 @@
+{
+    "buoy" : {
+        "height_px": 100.0,
+        "width_px": 20.5,
+        "real_height": 2.0,
+        "real_weight": 2.1,
+        "real_distance": 10.5
+    },
+
+    "roulette" : {
+        "height_px": 56.0,
+        "width_px": 45.5,
+        "real_height": 4.0,
+        "real_weight": 1.9,
+        "real_distance": 40.5
+    }
+    
+}
