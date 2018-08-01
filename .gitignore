@@ -19,4 +19,4 @@ ros/test.launch
 **/.vsocde
 
 # TensorFlow
-ros/src/vision/scripts/tf
+ros/src/vision/tensorflow
