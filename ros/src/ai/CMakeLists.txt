@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(ai)
 set(CMAKE_CXX_FLAGS "-std=c++11")
+set(Boost_USE_MULTITHREADED OFF)
 
 find_package(catkin REQUIRED COMPONENTS
   #message_generation
@@ -33,3 +34,4 @@ include_directories(
 add_executable(master src/master.cpp)
 target_link_libraries(master ${catkin_LIBRARIES})
 add_dependencies(master ai_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
+target_include_directories(master PUBLIC ${Boost_INCLUDE_DIRS})

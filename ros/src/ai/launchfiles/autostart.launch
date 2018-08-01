@@ -1,10 +1,12 @@
 <launch>
      <arg name="poll_delay" default="1"/>
      <arg name="start_delay" default="10"/>
+     <arg name="json_location" default="$(find ai)/commands_straight.js"/>
 
     <node name="ai_master" pkg="ai" type="master" required="false">
         <param name="can_start" value="true"/>
         <param name="start_delay" value="$(arg start_delay)"/>
         <param name="poll_delay" value="$(arg poll_delay)"/>
+        <param name="json_location" value="$(arg json_location)"/>
     </node>
 </launch>
