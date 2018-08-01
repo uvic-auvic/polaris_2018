@@ -1,8 +1,6 @@
 <launch>
-    <arg name="topic_name" default="top_face_cam"/>
-    <arg name="gamma" default="1.6"/>
+    <arg name="topic_name" default="/video/csi_cam"/>
     <node name="classifier" pkg="vision" type="classifier.py"  required="true">
-        <param name="topic_name" value="$(arg topic_name)"/>
-        <param name="gamma" value="$(arg gamma)"/>
+          <param name="topic_name" value="$(arg topic_name)"/>
     </node>
 </launch>

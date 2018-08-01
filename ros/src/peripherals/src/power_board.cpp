@@ -264,7 +264,7 @@ int main(int argc, char ** argv)
     ROS_INFO("Using Power Board on fd %s\n", srv.response.device_fd.c_str());
     power_board device(srv.response.device_fd);
 
-    ros::Publisher pub = nh.advertise<peripherals::powerboard>("power_board_data", 10);
+    ros::Publisher pub = nh.advertise<peripherals::powerboard>("power_board_data", 1);
     ros::ServiceServer pwr_en = nh.advertiseService("PowerEnable", &power_board::power_enabler, &device); 
     ros::ServiceServer avg_ext_p = nh.advertiseService("AverageExtPressure", &power_board::average_ext_pressure, &device);
 

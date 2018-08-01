@@ -1,6 +1,6 @@
 <launch>
     <arg name="device_id" default="power_board"/>
-    <arg name="loop_rate" default="10"/>
+    <arg name="loop_rate" default="50"/>
 
     <node name="power_board" pkg="peripherals" type="power_board" respawn="true" respawn_delay="1" >
         <param name="device_id" value="$(arg device_id)"/>
