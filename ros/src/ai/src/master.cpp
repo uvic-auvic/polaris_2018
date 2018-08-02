@@ -7,6 +7,7 @@
 #include <exception>
 #include "ai/start.h"
 #include "navigation/nav_request.h"
+#include "peripherals/avg_data.h"
 
 using startreq = ai::start::Request;
 using startres = ai::start::Response;
@@ -267,11 +268,23 @@ int main(int argc, char ** argv)
     ros::NodeHandle nh("~");
     autonomous_manager am;
     ros::Publisher nav_req_pub = nh.advertise<navigation::nav_request>("/nav/navigation", 1);
-
+    ros::ServiceClient nav_calib = nh.serviceClient<peripherals::avg_data>("/nav/CalibrateSurfaceDepth");
+    
     am.start();
+
     // Start doing AI things
     ROS_INFO("Starting Autonomous Mode");
 
+    // Calibrate pressure sensor
+    peripherals::avg_data srv;
+    srv.request.acq_rate = 30;
+    srv.request.acq_count = 100;
+    if(!nav_calib.call(srv))
+    {
+	ROS_INFO("Failed to calibrate the system.");
+	return 1;
+    }
+    
     am.run_forward();
 
     ros::spin();

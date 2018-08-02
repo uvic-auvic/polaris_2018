@@ -11,8 +11,8 @@
     <arg name="max_angular_pos" default="90"/>
 
     <!-- Velocity Z Control System (Depth/Up/Down) -->
-    <arg name="Kp_vel_z" default="0.1"/>
-    <arg name="Ki_vel_z" default="0.2"/>
+    <arg name="Kp_vel_z" default="0.35"/>
+    <arg name="Ki_vel_z" default="0.009"/>
 
     <!-- Position Pitch Control System -->
     <arg name="Kp_pos_p" default="15"/>
@@ -23,8 +23,8 @@
     <!-- Position Roll Control System -->
     <arg name="Kp_pos_r" default="15"/>
     <arg name="Ki_pos_r" default="15"/>
-    <arg name="Kp_vel_r" default="0.01"/>
-    <arg name="Ki_vel_r" default="0.002"/>
+    <arg name="Kp_vel_r" default="0.055555"/>
+    <arg name="Ki_vel_r" default="0.0002"/>
     
     <!-- Velocity Yaw Control System -->
     <arg name="Kp_vel_yw" default="0.85"/>

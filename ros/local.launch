@@ -2,26 +2,33 @@
     <!-- Arguments that can be overriden from the command line-->
     <!-- Append argname:=argvalue to roslaunch command in order to override -->
     <arg name="record" default="false"/>
-    <arg name="save_location" default="$(env HOME)/rosbag/auvic"/>
-    <arg name="only_compressed_regex" value="-e &quot;(^\/video(.*)compressed$)|(^(?!\/video).*$)&quot;"/>
+    <arg name="save_location" default="$(env HOME)/rosbag/main_"/>
     <arg name="max_linear_vel" value="5.0"/>
     <arg name="max_angular_vel" value="180.0"/>
 
     <!-- Included include files -->
     <include file="$(find webgui)/webgui.launch"/>
-    <!--include file="$(find vision)/launchfiles/camera.launch">
-        <arg name="node_name" value="front_camera"/>
-        <arg name="topic_name" value="front_camera"/>
+    <!--<include file="$(find vision)/launchfiles/camera.launch">
+        <arg name="node_name" value="bottom_camera"/>
         <arg name="fps" value="1"/>
         <arg name="fd" value="/dev/video1"/>
+        <arg name="record" value="$(arg record)"/>
+    </include>
+    <include file="$(find vision)/launchfiles/camera.launch">
+        <arg name="node_name" value="front_camera"/>
+        <arg name="fps" value="1"/>
+        <arg name="fd" value="/dev/video2"/>
+        <arg name="record" value="$(arg record)"/>
+    </include>-->
+    <!--<include file="$(find vision)/launchfiles/jetson_csi_cam.launch">
+        <arg name="record" value="$(arg record)"/>                       
     </include-->
-    <!--include file="$(find vision)/launchfiles/camera.launch">
-        <arg name="node_name" value="bottom_camera"/>
-        <arg name="topic_name" value="bottom_camera"/>
-        <arg name="fps" value="10"/>
-        <arg name="fd" value="/dev/video0"/>
-    </include-->
-    <!--include file="$(find vision)/launchfiles/jetson_csi_cam.launch"/-->      
+    <include file="$(find vision)/launchfiles/scanner.launch">
+        <arg name="cam_name" value="front_camera"/>
+    </include>
+
+    <!--include file="$(find vision)/launchfiles/classifier.launch"/-->
+
     <include file="$(find monitor)/launchfiles/serial.launch"/>
     <include file="$(find peripherals)/launchfiles/power_board.launch"/>
     <include file="$(find peripherals)/launchfiles/imu.launch"/>
@@ -37,12 +44,13 @@
     </include>
     <include file="$(find navigation)/launchfiles/rpm_controller.launch"/>
     <include file="$(find peripherals)/launchfiles/motors.launch"/>
-    <!--include file="$(find vision)/launchfiles/classifier.launch"/-->
+    <include file="$(find ai)/launchfiles/autostart.launch"/>
+
     <!--include file="$(find vision)/launchfiles/sonia_bag.launch">
         <arg name="loc" value="/home/asinha/Documents/buoys/buoys-14h48-1.bag"/>
     </include-->
 
     <group if="$(arg record)">
-        <node name="rosbag" pkg="rosbag" type="record"  args="-o $(arg save_location) -a"/> 
+        <node name="rosbag" pkg="rosbag" type="record"  args="-o $(arg save_location) -a -x /video/(.*)"/> 
     </group> 
 </launch>
