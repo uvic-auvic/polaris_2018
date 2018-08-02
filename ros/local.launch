@@ -1,7 +1,7 @@
 <launch>
     <!-- Arguments that can be overriden from the command line-->
     <!-- Append argname:=argvalue to roslaunch command in order to override -->
-    <arg name="record" default="true"/>
+    <arg name="record" default="false"/>
     <arg name="save_location" default="$(env HOME)/rosbag/main_"/>
     <arg name="max_linear_vel" value="5.0"/>
     <arg name="max_angular_vel" value="180.0"/>

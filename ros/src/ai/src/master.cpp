@@ -194,7 +194,6 @@ int main(int argc, char ** argv)
 
     for(int i = 0; i < nav_order.size(); i++)
     {
-        ROS_ERROR("i = %d", i);
         nav_req_pub.publish(nav_order[i]);
         
         if(timing[i] > 0)
