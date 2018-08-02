@@ -54,12 +54,22 @@ private:
     int start_delay;
 };
 
-void parse_json(std::vector<navigation::nav_request> &nav_reqs, std::vector<double> &times, std::string json_file_location)
+bool parse_json(std::vector<navigation::nav_request> &nav_reqs, std::vector<double> &times, std::string json_file_location)
 {
     ptree pt;
     boost::property_tree::read_json(json_file_location, pt);
 
-    ROS_ERROR("Parsing data!");
+    // 1st dimension: holds all instances of nested repeats. First element is main.
+    // 2nd dimension: used for all requests in a row for repititions
+    std::vector<std::vector<navigation::nav_request>> nav_ordering;
+    std::vector<std::vector<double>> time_ordering;
+
+    // Used to determine how many times to repeat each list in the list
+    std::vector<int> repeat_counter;
+
+    nav_ordering.push_back(std::vector<navigation::nav_request>());
+    time_ordering.push_back(std::vector<double>());
+    repeat_counter.push_back(1);
 
     for(ptree::const_iterator it = pt.begin(); it != pt.end(); ++it)
     {
@@ -71,12 +81,83 @@ void parse_json(std::vector<navigation::nav_request> &nav_reqs, std::vector<doub
         nav_req.depth = it->second.get<double>("depth");
         double time = it->second.get<double>("time_ms");
 
-        // Append data to output
-        nav_reqs.push_back(nav_req);
-        times.push_back(time);
+        if(it->first.compare("single") == 0)
+        {
+            if(nav_ordering.size() > 1)
+            {
+                ROS_ERROR("Invalid json. \"single\" cannot be inside a \"repeat\".");
+                return false;
+            }
+            nav_ordering.front().push_back(nav_req);
+            time_ordering.front().push_back(time);
+        }
+        else if(it->first.compare(0, 12, "repeat_start") == 0)
+        {
+            size_t dash_idx = it->first.find('-');
+            std::string repeat_count = it->first.substr(dash_idx + 1, it->first.size() - (dash_idx + 1)); 
+            if(repeat_count == "")
+            {
+                ROS_ERROR("Invalid json. \"repeat_start\" must be written in the following format: \"repeat_start-x\", where x is the number of repititions");
+                return false;
+            }
+            int count = std::stoi(repeat_count);
+
+            nav_ordering.push_back(std::vector<navigation::nav_request>());
+            time_ordering.push_back(std::vector<double>());
+            repeat_counter.push_back(count);
+
+            nav_ordering.back().push_back(nav_req);
+            time_ordering.back().push_back(time);
+        }
+        else if(it->first.compare("repeat") == 0)
+        {
+            if(nav_ordering.size() == 1)
+            {
+                ROS_ERROR("Invalid json. \"repeat\" must be between a \"repeat_start\" and a \"repeat_end\".");
+                return false;
+            }
+            nav_ordering.back().push_back(nav_req);
+            time_ordering.back().push_back(time);
+        }
+        else if(it->first.compare("repeat_end") == 0)
+        {
+            if(nav_ordering.size() == 1)
+            {
+                ROS_ERROR("Invalid json. \"repeat_end\" must come after a \"repeat_start\".");
+                return false;
+            }
+
+            // Add this request to current loop
+            nav_ordering.back().push_back(nav_req);
+            time_ordering.back().push_back(time);
+
+            // Pop off last loop of loop list
+            std::vector<navigation::nav_request> nav_loop = nav_ordering.back();
+            std::vector<double> time_loop = time_ordering.back();
+            int repeat_count = repeat_counter.back();
+            nav_ordering.pop_back();
+            time_ordering.pop_back();
+            repeat_counter.pop_back();
+
+            // Add loop for the required number of times to its outer loop
+            for(int i = 0; i < repeat_count; i++)
+            {
+                nav_ordering.back().insert(nav_ordering.back().end(), nav_loop.begin(), nav_loop.end());
+                time_ordering.back().insert(time_ordering.back().end(), time_loop.begin(), time_loop.end());
+            }
+        }
     }
 
-    ROS_ERROR("Data parsed!");
+    if(nav_ordering.size() > 1)
+    {
+        ROS_ERROR("Invalid json. Unterminated loop. A \"repeat_start\" must terminate with a \"repeat_end\"");
+        return false;
+    }
+
+    nav_reqs = nav_ordering.front();
+    times = time_ordering.front();
+
+    return true;
 }
 
 int main(int argc, char ** argv)
@@ -105,7 +186,11 @@ int main(int argc, char ** argv)
 
     std::string json_location;
     nh.getParam("json_location", json_location);
-    parse_json(nav_order, timing, json_location);
+    if(!parse_json(nav_order, timing, json_location))
+    {
+        ROS_ERROR("Failed to parse json. Exiting.");
+        return 1;
+    }
 
     for(int i = 0; i < nav_order.size(); i++)
     {
