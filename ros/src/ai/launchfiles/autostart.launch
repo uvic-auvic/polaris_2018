@@ -1,12 +1,26 @@
 <launch>
      <arg name="poll_delay" default="1"/>
      <arg name="start_delay" default="10"/>
-     <arg name="json_location" default="$(find ai)/commands_straight.js"/>
+     <arg name="forward_location" default="$(find ai)json_cmds/forward.json"/>
+     <arg name="reverse_location" default="$(find ai)json_cmds/reverse.json"/>
+     <arg name="submerge_location" default="$(find ai)json_cmds/submerge.json"/>
+     <arg name="rise_location" default="$(find ai)json_cmds/rise.json"/>
+     <arg name="rotate_cw_location" default="$(find ai)json_cmds/rotate_cw.json"/>
+     <arg name="rotate_ccw_location" default="$(find ai)json_cmds/rotate_ccw.json"/>
+     <arg name="right_location" default="$(find ai)json_cmds/right.json"/>
+     <arg name="left_location" default="$(find ai)json_cmds/left.json"/>
 
     <node name="ai_master" pkg="ai" type="master" required="false">
         <param name="can_start" value="true"/>
         <param name="start_delay" value="$(arg start_delay)"/>
         <param name="poll_delay" value="$(arg poll_delay)"/>
-        <param name="json_location" value="$(arg json_location)"/>
+        <param name="forward_location" value="$(arg forward_location)"/>
+        <param name="reverse_location" value="$(arg reverse_location)"/>
+        <param name="submerge_location" value="$(arg submerge_location)"/>
+        <param name="rise_location" value="$(arg rise_location)"/>
+        <param name="rotate_cw_location" value="$(arg rotate_cw_location)"/>
+        <param name="rotate_ccw_location" value="$(arg rotate_ccw_location)"/>
+        <param name="right_location" value="$(arg right_location)"/>
+        <param name="left_location" value="$(arg left_location)"/>
     </node>
 </launch>
