@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(ai)
 set(CMAKE_CXX_FLAGS "-std=c++11")
+set(Boost_USE_MULTITHREADED OFF)
 
 find_package(catkin REQUIRED COMPONENTS
   #message_generation
@@ -8,6 +9,9 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   message_generation
+  peripherals
+  navigation
+  geometry_msgs
 )
 
 add_service_files(
@@ -18,7 +22,8 @@ add_service_files(
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
   DEPENDENCIES
-
+  peripherals
+  navigation
 )
 
 catkin_package(
@@ -32,4 +37,5 @@ include_directories(
 
 add_executable(master src/master.cpp)
 target_link_libraries(master ${catkin_LIBRARIES})
-add_dependencies(master ai_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
+add_dependencies(master ai_generate_messages_cpp peripherals_generate_messages_cpp navigation_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
+target_include_directories(master PUBLIC ${Boost_INCLUDE_DIRS})
