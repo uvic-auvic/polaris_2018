@@ -25,10 +25,15 @@ find_package(catkin REQUIRED COMPONENTS
 #  enable_detection.srv
 #)
 
-#generate_messages(
-#  DEPENDENCIES
+add_message_files(
+  FILES
+  offset_position.msg
+)
+
+generate_messages(
+  DEPENDENCIES
 #  std_msgs
-#)
+)
 
 # This is useful when we want other packages to be able to use this package
 # E.g. if another package wanted to include a few headers from here
@@ -38,7 +43,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
   LIBRARIES vision
-  CATKIN_DEPENDS cv_bridge image_transport roscpp sensor_msgs message_runtime std_msgs
+  CATKIN_DEPENDS cv_bridge image_transport roscpp sensor_msgs message_runtime std_msgs message_generation
 #  DEPENDS system_lib
 )
 

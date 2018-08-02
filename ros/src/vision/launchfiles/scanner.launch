@@ -1,0 +1,8 @@
+<launch>
+        <arg name="cam_name" default="topic_face_cam"/>
+        
+        <node name="scanner_$(arg cam_name)" pkg="vision" type="scanner.py" required="true">
+              <param name="topic_in_name" value="/video/$(arg cam_name)"/>
+              <param name="topic_out_name" value="/video/scanned_$(arg cam_name)"/>
+        </node>
+</launch>
