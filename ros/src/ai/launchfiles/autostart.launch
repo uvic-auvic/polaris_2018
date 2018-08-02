@@ -1,7 +1,7 @@
 <launch>
      <arg name="poll_delay" default="1"/>
      <arg name="start_delay" default="10"/>
-     <arg name="json_location" default="$(find ai)/commands_straight.js"/>
+     <arg name="json_location" default="$(find ai)/commands_straight.json"/>
 
     <node name="ai_master" pkg="ai" type="master" required="false">
         <param name="can_start" value="true"/>

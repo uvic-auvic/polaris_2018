@@ -37,7 +37,7 @@
 
 #define VEL_X_MUL               (1.0)
 #define VEL_Y_MUL               (1.0)
-#define VEL_Z_MUL               (1.0)
+#define VEL_Z_MUL               (3.0)
 #define ROLL_MUL                (-14.0)
 #define PITCH_MUL               (-18.0)
 #define YAW_MUL                 (20.0)

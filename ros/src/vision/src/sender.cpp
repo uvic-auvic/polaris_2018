@@ -32,7 +32,7 @@ int main (int argc, char ** argv)
     image_transport::Publisher publisher = it.advertise(publisher_name, 5);
     uint8_t video_index = (uint8_t) (fd.back() - '0');
     
-    cv::VideoCapture source(video_index - '0');
+    cv::VideoCapture source(video_index);
     if (!source.isOpened()) {
         ROS_ERROR("Failed to open device on %s", fd.c_str());
         return -1;
