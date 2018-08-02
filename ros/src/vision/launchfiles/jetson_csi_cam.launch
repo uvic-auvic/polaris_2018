@@ -22,7 +22,7 @@
     nvvidconv flip-method=0 ! video/x-raw, format=(string)BGRx ! videoconvert ! video/x-raw, format=(string)BGR" />
 
   <group if="$(arg record)">
-    <node name="rosbag_$(arg node_name)" pkg="rosbag" type="record" args="-e /video/$(arg topic_name)$ -o $(arg save_location)"/>
+    <node name="rosbag_$(arg topic_name)" pkg="rosbag" type="record" args="-e /video/$(arg topic_name)$ -o $(arg save_location)"/>
   </group>
 
   <!-- Start the GSCAM node -->
