@@ -8,6 +8,7 @@
 #include "ai/start.h"
 #include "navigation/nav_request.h"
 #include "peripherals/avg_data.h"
+#include "vision/offset_position.h"
 
 using startreq = ai::start::Request;
 using startres = ai::start::Response;
@@ -30,12 +31,20 @@ public:
     autonomous_manager() 
         :   nh(ros::NodeHandle("~")),
             rss(nh.advertiseService("start_ai", &autonomous_manager::start_autonomous_mode, this)),
-            nav_req_pub(nh.advertise<navigation::nav_request>("/nav/navigation", 1))
+            nav_req_pub(nh.advertise<navigation::nav_request>("/nav/navigation", 1)),
+            depth_delta(0.0),
+            forwards_delta(0.0),
+            sideways_delta(0.0),
+            yaw_rate_delta(0.0)
     {
         nh.getParam("can_start", can_start);
         nh.getParam("poll_delay", poll_delay);
         nh.getParam("start_delay", start_delay);
-        
+        nh.getParam("depth_delta_max", depth_delta_max);
+        nh.getParam("forwards_delta_max", forwards_delta_max);
+        nh.getParam("sideways_delta_max", sideways_delta_max);
+        nh.getParam("yaw_delta_max", yaw_delta_max);
+
         std::string forward_loc, reverse_loc, submerge_loc, rise_loc, rotate_cw_loc, rotate_ccw_loc, right_loc, left_loc;
         nh.getParam("forward_location", forward_loc);
         nh.getParam("reverse_location", reverse_loc);
@@ -117,6 +126,8 @@ public:
     void run_rotate_ccw() {run_event(rotate_ccw);}
     void run_left() {run_event(left);}
     void run_right() {run_event(right);}
+
+    void receive_cam_offset(const vision::offset_position::ConstPtr &msg);
 private:
 
     void run_event(std::vector<nav_event_t> event_list);
@@ -127,10 +138,18 @@ private:
     bool can_start;
     int poll_delay;
     int start_delay;
+
+    // Placeholders for deltas
     double depth_delta;
     double forwards_delta;
     double sideways_delta;
     double yaw_rate_delta;
+
+    // Limits for the deltas
+    double depth_delta_max;
+    double forwards_delta_max;
+    double sideways_delta_max;
+    double yaw_delta_max;
 
     // Navigation Event Lists
     std::vector<nav_event_t> forwards;
@@ -239,9 +258,14 @@ private:
 
 };
 
+void autonomous_manager::receive_cam_offset(const vision::offset_position::ConstPtr &msg)
+{
+    yaw_rate_delta = -msg->relative_offset_x * yaw_delta_max / 100.0;
+}
+
 void autonomous_manager::run_event(std::vector<nav_event_t> event_list)
 {
-    for(int i = 0; i < event_list.size(); i++)
+    for(int i = 0; i < event_list.size() && ros::ok(); i++)
     {
         // Get message and add deltas
         navigation::nav_request nav_req = event_list[i].nav_req;
@@ -266,14 +290,20 @@ int main(int argc, char ** argv)
 {
     ros::init(argc, argv, "ai_master");
     ros::NodeHandle nh("~");
+
+    std::string front_cam_name;
+    nh.getParam("front_cam_name", front_cam_name);
+
     autonomous_manager am;
     ros::Publisher nav_req_pub = nh.advertise<navigation::nav_request>("/nav/navigation", 1);
     ros::ServiceClient nav_calib = nh.serviceClient<peripherals::avg_data>("/nav/CalibrateSurfaceDepth");
+    ros::Subscriber sub_front_cam_offsets = 
+        nh.subscribe<vision::offset_position>("/vision/" + front_cam_name, 1, &autonomous_manager::receive_cam_offset, &am);
     
     am.start();
 
     // Start doing AI things
-    ROS_INFO("Starting Autonomous Mode");
+    ROS_ERROR("Starting Autonomous Mode");
 
     // Calibrate pressure sensor
     peripherals::avg_data srv;
@@ -281,9 +311,11 @@ int main(int argc, char ** argv)
     srv.request.acq_count = 100;
     if(!nav_calib.call(srv))
     {
-	ROS_INFO("Failed to calibrate the system.");
+	ROS_ERROR("Failed to calibrate the system.");
 	return 1;
     }
+
+    ROS_ERROR("Calibration complete");
     
     am.run_forward();
 

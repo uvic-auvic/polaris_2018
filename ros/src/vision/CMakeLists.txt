@@ -42,7 +42,7 @@ generate_messages(
 # SO theres no need (for now)
 catkin_package(
 #  INCLUDE_DIRS include
-  LIBRARIES vision
+  #LIBRARIES vision
   CATKIN_DEPENDS cv_bridge image_transport roscpp sensor_msgs message_runtime std_msgs message_generation
 #  DEPENDS system_lib
 )

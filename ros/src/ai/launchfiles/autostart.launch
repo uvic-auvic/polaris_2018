@@ -1,6 +1,13 @@
 <launch>
      <arg name="poll_delay" default="1"/>
      <arg name="start_delay" default="10"/>
+     <arg name="front_cam_name" default="top_face_cam"/>
+     <arg name="depth_delta_max" default="2.0"/>
+     <arg name="forwards_delta_max" default="5.0"/>
+     <arg name="sideways_delta_max" default="5.0"/>
+     <arg name="yaw_delta_max" default="10.0"/>
+
+
      <arg name="forward_location" default="$(find ai)json_cmds/forward.json"/>
      <arg name="reverse_location" default="$(find ai)json_cmds/reverse.json"/>
      <arg name="submerge_location" default="$(find ai)json_cmds/submerge.json"/>
@@ -10,10 +17,15 @@
      <arg name="right_location" default="$(find ai)json_cmds/right.json"/>
      <arg name="left_location" default="$(find ai)json_cmds/left.json"/>
 
-    <node name="ai_master" pkg="ai" type="master" required="false">
+    <node name="ai_master" pkg="ai" type="master" required="true">
         <param name="can_start" value="true"/>
         <param name="start_delay" value="$(arg start_delay)"/>
         <param name="poll_delay" value="$(arg poll_delay)"/>
+        <param name="depth_delta_max" value="$(arg depth_delta_max)"/>
+        <param name="forwards_delta_max" value="$(arg forwards_delta_max)"/>
+        <param name="sideways_delta_max" value="$(arg sideways_delta_max)"/>
+        <param name="yaw_delta_max" value="$(arg yaw_delta_max)"/>
+        <param name="front_cam_name" value="$(arg front_cam_name)"/>
         <param name="forward_location" value="$(arg forward_location)"/>
         <param name="reverse_location" value="$(arg reverse_location)"/>
         <param name="submerge_location" value="$(arg submerge_location)"/>

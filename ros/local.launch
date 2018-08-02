@@ -5,6 +5,7 @@
     <arg name="save_location" default="$(env HOME)/rosbag/main_"/>
     <arg name="max_linear_vel" value="5.0"/>
     <arg name="max_angular_vel" value="180.0"/>
+    <arg name="front_camera" value="front_camera"/>
 
     <!-- Included include files -->
     <include file="$(find webgui)/webgui.launch"/>
@@ -15,7 +16,7 @@
         <arg name="record" value="$(arg record)"/>
     </include>
     <include file="$(find vision)/launchfiles/camera.launch">
-        <arg name="node_name" value="front_camera"/>
+        <arg name="node_name" value="$(arg front_camera)"/>
         <arg name="fps" value="1"/>
         <arg name="fd" value="/dev/video2"/>
         <arg name="record" value="$(arg record)"/>
@@ -24,7 +25,7 @@
         <arg name="record" value="$(arg record)"/>                       
     </include-->
     <include file="$(find vision)/launchfiles/scanner.launch">
-        <arg name="cam_name" value="front_camera"/>
+        <arg name="cam_name" value="$(arg front_camera)"/>
     </include>
 
     <!--include file="$(find vision)/launchfiles/classifier.launch"/-->
@@ -44,7 +45,9 @@
     </include>
     <include file="$(find navigation)/launchfiles/rpm_controller.launch"/>
     <include file="$(find peripherals)/launchfiles/motors.launch"/>
-    <include file="$(find ai)/launchfiles/autostart.launch"/>
+    <include file="$(find ai)/launchfiles/autostart.launch">
+        <arg name="front_cam_name" value="$(arg front_camera)"/>
+    </include>
 
     <!--include file="$(find vision)/launchfiles/sonia_bag.launch">
         <arg name="loc" value="/home/asinha/Documents/buoys/buoys-14h48-1.bag"/>
