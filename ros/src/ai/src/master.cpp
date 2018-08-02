@@ -304,7 +304,7 @@ int main(int argc, char ** argv)
 
     // Start doing AI things
     ROS_ERROR("Starting Autonomous Mode");
-
+    
     // Calibrate pressure sensor
     peripherals::avg_data srv;
     srv.request.acq_rate = 30;
@@ -315,10 +315,8 @@ int main(int argc, char ** argv)
 	return 1;
     }
 
-    ROS_ERROR("Calibration complete");
-    
     am.run_forward();
-
+    
     ros::spin();
 
     return 0;

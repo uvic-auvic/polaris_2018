@@ -9,7 +9,7 @@
 
     <!-- Included include files -->
     <include file="$(find webgui)/webgui.launch"/>
-    <include file="$(find vision)/launchfiles/camera.launch">
+    <!--<include file="$(find vision)/launchfiles/camera.launch">
         <arg name="node_name" value="bottom_camera"/>
         <arg name="fps" value="1"/>
         <arg name="fd" value="/dev/video2"/>

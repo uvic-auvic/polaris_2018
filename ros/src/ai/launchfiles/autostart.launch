@@ -7,7 +7,6 @@
      <arg name="sideways_delta_max" default="5.0"/>
      <arg name="yaw_delta_max" default="10.0"/>
 
-
      <arg name="forward_location" default="$(find ai)json_cmds/forward.json"/>
      <arg name="reverse_location" default="$(find ai)json_cmds/reverse.json"/>
      <arg name="submerge_location" default="$(find ai)json_cmds/submerge.json"/>
