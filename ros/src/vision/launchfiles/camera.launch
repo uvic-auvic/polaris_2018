@@ -1,4 +1,3 @@
-
 <launch>        
         <!-- Vision Node -->
         <arg name="record" default="false"/>
