@@ -1,0 +1,8 @@
+<launch>
+    <!-- Included include files -->
+    <include file="$(find webgui)/webgui.launch"/>
+    <include file="$(find peripherals)/launchfiles/power_board.launch"/>
+    <include file="$(find monitor)/launchfiles/serial.launch">
+	<arg name="location" value="$(find monitor)/power_board.json"/>
+    </include>
+</launch>

@@ -29,7 +29,7 @@ using AvgDataRes = peripherals::avg_data::Response;
 
 class power_board{
 public:
-    power_board(const std::string & port, int baud_rate = 9600, int timeout = 1000);
+    power_board(const std::string & port, int baud_rate = 115200, int timeout = 1000);
     ~power_board();
     bool get_powerboard_data(powerboardInfo & msg);
     bool power_enabler(PowerEnableReq &req, PowerEnableRes &res);

@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   peripherals
   navigation
+  vision
   geometry_msgs
 )
 
@@ -24,6 +25,7 @@ generate_messages(
   DEPENDENCIES
   peripherals
   navigation
+  vision
 )
 
 catkin_package(
@@ -37,5 +39,11 @@ include_directories(
 
 add_executable(master src/master.cpp)
 target_link_libraries(master ${catkin_LIBRARIES})
-add_dependencies(master ai_generate_messages_cpp peripherals_generate_messages_cpp navigation_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
+add_dependencies(master 
+  ai_generate_messages_cpp 
+  peripherals_generate_messages_cpp 
+  navigation_generate_messages_cpp 
+  vision_generate_messages_cpp 
+  ${catkin_EXPORTED_TARGETS}
+)
 target_include_directories(master PUBLIC ${Boost_INCLUDE_DIRS})
