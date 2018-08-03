@@ -9,6 +9,7 @@
 #include "navigation/nav_request.h"
 #include "peripherals/avg_data.h"
 #include "vision/offset_position.h"
+#include "vision/dice_offsets.h"
 
 using startreq = ai::start::Request;
 using startres = ai::start::Response;
@@ -35,7 +36,10 @@ public:
             depth_delta(0.0),
             forwards_delta(0.0),
             sideways_delta(0.0),
-            yaw_rate_delta(0.0)
+            yaw_rate_delta(0.0),
+            max_dice_hit(false),
+            min_dice_hit(false),
+            dice_detected(false)
     {
         nh.getParam("can_start", can_start);
         nh.getParam("poll_delay", poll_delay);
@@ -128,6 +132,7 @@ public:
     void run_right() {run_event(right);}
 
     void receive_cam_offset(const vision::offset_position::ConstPtr &msg);
+    void receive_dice_offsets(const vision::dice_offsets::ConstPtr &msg);
 private:
 
     void run_event(std::vector<nav_event_t> event_list);
@@ -138,6 +143,9 @@ private:
     bool can_start;
     int poll_delay;
     int start_delay;
+    bool max_dice_hit;
+    bool min_dice_hit;
+    bool dice_detected;
 
     // Placeholders for deltas
     double depth_delta;
@@ -260,7 +268,25 @@ private:
 
 void autonomous_manager::receive_cam_offset(const vision::offset_position::ConstPtr &msg)
 {
-    yaw_rate_delta = -msg->relative_offset_x * yaw_delta_max / 100.0;
+    yaw_rate_delta = msg->relative_offset_x * yaw_delta_max / 100.0;
+}
+
+void autonomous_manager::receive_dice_offsets(const vision::dice_offsets::ConstPtr &msg)
+{
+    yaw_rate_delta = msg->max_dice_offset.x * yaw_delta_max / 100.0;
+    depth_delta = -msg->max_dice_offset.y * depth_delta_max / 100.0;
+    
+    /*dice_detected = true;
+    if(!max_dice_hit)
+    {
+        yaw_rate_delta = msg->max_dice_offset.x * yaw_delta_max / 100.0;
+        depth_delta = -msg->max_dice_offset.y * depth_delta_max / 100.0;
+    }
+    else if(!min_dice_hit)
+    {
+        yaw_rate_delta = msg->min_dice_offset.x * yaw_delta_max / 100.0;
+        depth_delta = -msg->min_dice_offset.y * depth_delta_max / 100.0;
+    }*/
 }
 
 void autonomous_manager::run_event(std::vector<nav_event_t> event_list)
@@ -299,6 +325,8 @@ int main(int argc, char ** argv)
     ros::ServiceClient nav_calib = nh.serviceClient<peripherals::avg_data>("/nav/CalibrateSurfaceDepth");
     ros::Subscriber sub_front_cam_offsets = 
         nh.subscribe<vision::offset_position>("/vision/" + front_cam_name, 1, &autonomous_manager::receive_cam_offset, &am);
+    ros::Subscriber sub_dice_offsets = 
+        nh.subscribe<vision::offset_position>("/vision/dice_offsets", 1, &autonomous_manager::receive_dice_offsets, &am);
     
     am.start();
 
