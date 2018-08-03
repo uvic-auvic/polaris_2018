@@ -16,10 +16,10 @@ class dice_finder:
 
     def detect(self, img):
         msg = dice_offsets()
-        msg.max_dice_offset.x = 0
-        msg.max_dice_offset.y = 0
-        msg.min_dice_offset.x = 0
-        msg.min_dice_offset.y = 0
+        msg.max_dice_offset.x_offset = 0
+        msg.max_dice_offset.y_offset = 0
+        msg.min_dice_offset.x_offset = 0
+        msg.min_dice_offset.y_offset = 0
         self.pub.publish(msg) 
         
 if __name__ == '__main__':

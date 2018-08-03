@@ -273,8 +273,8 @@ void autonomous_manager::receive_cam_offset(const vision::offset_position::Const
 
 void autonomous_manager::receive_dice_offsets(const vision::dice_offsets::ConstPtr &msg)
 {
-    yaw_rate_delta = msg->max_dice_offset.x * yaw_delta_max / 100.0;
-    depth_delta = -msg->max_dice_offset.y * depth_delta_max / 100.0;
+    yaw_rate_delta = msg->max_dice_offset.x_offset * yaw_delta_max / 100.0;
+    depth_delta = -msg->max_dice_offset.y_offset * depth_delta_max / 100.0;
     
     /*dice_detected = true;
     if(!max_dice_hit)
@@ -326,7 +326,7 @@ int main(int argc, char ** argv)
     ros::Subscriber sub_front_cam_offsets = 
         nh.subscribe<vision::offset_position>("/vision/" + front_cam_name, 1, &autonomous_manager::receive_cam_offset, &am);
     ros::Subscriber sub_dice_offsets = 
-        nh.subscribe<vision::offset_position>("/vision/dice_offsets", 1, &autonomous_manager::receive_dice_offsets, &am);
+        nh.subscribe<vision::dice_offsets>("/vision/dice_offsets", 1, &autonomous_manager::receive_dice_offsets, &am);
     
     am.start();
 
