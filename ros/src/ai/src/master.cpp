@@ -138,6 +138,7 @@ private:
     bool can_start;
     int poll_delay;
     int start_delay;
+    navigation::nav_request last_nav_req;
 
     // Placeholders for deltas
     double depth_delta;
@@ -260,7 +261,16 @@ private:
 
 void autonomous_manager::receive_cam_offset(const vision::offset_position::ConstPtr &msg)
 {
-    yaw_rate_delta = -msg->relative_offset_x * yaw_delta_max / 100.0;
+	ROS_ERROR("Received it!");
+    yaw_rate_delta = ((double)-msg->relative_offset_x) * yaw_delta_max / 100.0;
+
+    navigation::nav_request nav_req = last_nav_req;
+    nav_req.depth += depth_delta;
+    nav_req.forwards_velocity += forwards_delta;
+    nav_req.sideways_velocity += sideways_delta;
+    nav_req.yaw_rate += yaw_rate_delta;
+    
+    nav_req_pub.publish(nav_req);
 }
 
 void autonomous_manager::run_event(std::vector<nav_event_t> event_list)
@@ -269,6 +279,7 @@ void autonomous_manager::run_event(std::vector<nav_event_t> event_list)
     {
         // Get message and add deltas
         navigation::nav_request nav_req = event_list[i].nav_req;
+        last_nav_req = nav_req;
         nav_req.depth += depth_delta;
         nav_req.forwards_velocity += forwards_delta;
         nav_req.sideways_velocity += sideways_delta;
@@ -283,6 +294,10 @@ void autonomous_manager::run_event(std::vector<nav_event_t> event_list)
             ros::spinOnce();
             d.sleep();
         }
+	else
+	{
+	    ros::spin();
+	}
     }
 }
 
@@ -298,7 +313,7 @@ int main(int argc, char ** argv)
     ros::Publisher nav_req_pub = nh.advertise<navigation::nav_request>("/nav/navigation", 1);
     ros::ServiceClient nav_calib = nh.serviceClient<peripherals::avg_data>("/nav/CalibrateSurfaceDepth");
     ros::Subscriber sub_front_cam_offsets = 
-        nh.subscribe<vision::offset_position>("/vision/" + front_cam_name, 1, &autonomous_manager::receive_cam_offset, &am);
+        nh.subscribe<vision::offset_position>("/video/scanned_" + front_cam_name, 1, &autonomous_manager::receive_cam_offset, &am);
     
     am.start();
 
@@ -312,7 +327,7 @@ int main(int argc, char ** argv)
     if(!nav_calib.call(srv))
     {
 	ROS_ERROR("Failed to calibrate the system.");
-	return 1;
+	//return 1;
     }
 
     am.run_forward();

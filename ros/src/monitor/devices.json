@@ -18,7 +18,7 @@
     },
 
     "hydrophones" : {
-	"ignore" : false,
+	"ignore" : true,
         "baud" : 115200,
         "ack_message" : "RID\n",
         "ack_response" : "Hydrophones v1.0\r\n",

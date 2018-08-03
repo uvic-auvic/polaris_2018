@@ -1,11 +1,11 @@
 <launch>
      <arg name="poll_delay" default="1"/>
      <arg name="start_delay" default="10"/>
-     <arg name="front_cam_name" default="top_face_cam"/>
+     <arg name="front_cam_name" default="topic_face_cam"/>
      <arg name="depth_delta_max" default="2.0"/>
      <arg name="forwards_delta_max" default="5.0"/>
      <arg name="sideways_delta_max" default="5.0"/>
-     <arg name="yaw_delta_max" default="10.0"/>
+     <arg name="yaw_delta_max" default="-3.0"/>
 
      <arg name="forward_location" default="$(find ai)json_cmds/forward.json"/>
      <arg name="reverse_location" default="$(find ai)json_cmds/reverse.json"/>

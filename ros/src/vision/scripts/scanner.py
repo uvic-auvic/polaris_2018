@@ -58,6 +58,8 @@ class object_scanner:
         if self.disable:
             return
         
+        msg = offset_position()
+        msg.relative_offset_x = 0
         img = self.bridge.imgmsg_to_cv2(img, "bgr8")
         orig_img = cv2.resize(img, self.dims)
         cv_img = cv2.GaussianBlur(orig_img, (9,9), 0)
@@ -67,11 +69,10 @@ class object_scanner:
         cv_img = cv2.Canny(cv_img, threshold1=75, threshold2=110)
         mask = np.ones((self.dims[1]+2, self.dims[0]+2), np.uint8)
         cv2.floodFill(cv_img, mask, (0,0), 255)
-
         squashed_height = cv2.reduce(cv_img, 0, cv2.REDUCE_SUM, dtype=cv2.CV_32S)[0]
 
         # find susbtrings of non-zero items in list
-        threshold = 2000
+        threshold = 2500
         centers = []
         start = -1
 
@@ -81,11 +82,16 @@ class object_scanner:
                     start = i
             else:
                 if start != -1:
-                    centers.append((sum(squashed_height[start:i]), start, i))
+                    height_sum = sum(squashed_height[start:i]) / 255
+                    width_sum = i - start
+                    gradient = height_sum / width_sum
+                    centers.append((height_sum, gradient, start, i))
                     start = -1
 
+        centers = [x for x in centers if x[2] > 2]
         if len(centers) < 2:
             self.impub.publish(self.bridge.cv2_to_imgmsg(orig_img, "bgr8"))
+            self.pub.publish(msg)
             return
 
         centers = sorted(centers, key=lambda x: x[0], reverse=True)
@@ -94,6 +100,7 @@ class object_scanner:
         # 2 vertical structures not comparable enough to be markers
         if diff > 1:
             self.impub.publish(self.bridge.cv2_to_imgmsg(orig_img, "bgr8"))
+            self.pub.publish(msg)
             return
 
         x = (centers[0][1] + centers[0][2] + centers[1][1] + centers[1][2]) / 4
@@ -105,7 +112,6 @@ class object_scanner:
         # publish position
         center_x = self.dims[0] / 2
         offset_x = x - center_x
-        msg = offset_position()
         msg.relative_offset_x = 100 * (float(offset_x) / center_x)
         self.pub.publish(msg) # return the position as a percentage of the width
         
