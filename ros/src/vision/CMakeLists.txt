@@ -28,6 +28,8 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
   FILES
   offset_position.msg
+  dice_offsets.msg
+  planar_offset.msg
 )
 
 generate_messages(
