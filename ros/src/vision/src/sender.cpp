@@ -1,21 +1,8 @@
-/***************************************************************
- * @file image_sender.cpp
- * @brief The node which provides a video source of some kind
- * @date February 2017
-/***************************************************************/
-
-/***************************************************************
- * Includes
-/***************************************************************/
 #include <opencv2/opencv.hpp>
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
 #include <ros/ros.h>
 
-
-/*************************************************************
- * Implementation [Image Sender]
-/*************************************************************/
 int main (int argc, char ** argv)
 {
     ros::init(argc, argv, "image_publisher");
@@ -24,20 +11,29 @@ int main (int argc, char ** argv)
 
     std::string topic_name, fd;
     int fps;
+    bool is_device;
     nh.getParam("topic_name", topic_name);
     nh.getParam("fd", fd);
     nh.getParam("fps", fps);
+    nh.getParam("is_device", is_device);
 
     std::string publisher_name = "/video/" + topic_name;
     image_transport::Publisher publisher = it.advertise(publisher_name, 5);
-    uint8_t video_index = (uint8_t) (fd.back() - '0');
-    
-    cv::VideoCapture source(video_index);
+
+    cv::VideoCapture source;
+    if (is_device) {
+        uint8_t video_index = (uint8_t) (fd.back() - '0');
+        source = cv::VideoCapture(video_index);
+    } else {
+        source = cv::VideoCapture(fd);
+    }
+
     if (!source.isOpened()) {
         ROS_ERROR("Failed to open device on %s", fd.c_str());
         return -1;
     }
 
+    ROS_INFO("Opened camera on %s", fd.c_str());
     ros::Rate loop_rate(fps);
 
     while(nh.ok())
