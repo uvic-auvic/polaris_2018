@@ -7,6 +7,7 @@
 #include <exception>
 #include "ai/start.h"
 #include "navigation/nav_request.h"
+#include "navigation/depth_info.h"
 #include "peripherals/avg_data.h"
 #include "vision/offset_position.h"
 #include "vision/dice_offsets.h"
@@ -27,6 +28,18 @@ typedef struct nav_event
     navigation::nav_request nav_req;
 } nav_event_t;
 
+enum states
+{
+    dive,
+    dead_reckon_gate,
+    dead_reckon_dice,
+    gate_detect,
+    dice_detect,
+    stop,
+    search,
+    rise
+};
+
 class autonomous_manager{
 public:
     autonomous_manager() 
@@ -37,9 +50,13 @@ public:
             forwards_delta(0.0),
             sideways_delta(0.0),
             yaw_rate_delta(0.0),
+            dice_en(false),
+            scanner_en(false),
             max_dice_hit(false),
             min_dice_hit(false),
-            dice_detected(false)
+            dice_detected(false),
+            fsm_state(dive),
+            depth_ok(false)
     {
         nh.getParam("can_start", can_start);
         nh.getParam("poll_delay", poll_delay);
@@ -48,8 +65,11 @@ public:
         nh.getParam("forwards_delta_max", forwards_delta_max);
         nh.getParam("sideways_delta_max", sideways_delta_max);
         nh.getParam("yaw_delta_max", yaw_delta_max);
+        nh.getParam("depth_submerge", depth_submerge);
+        nh.getParam("depth_rise", depth_rise);
 
         std::string forward_loc, reverse_loc, submerge_loc, rise_loc, rotate_cw_loc, rotate_ccw_loc, right_loc, left_loc;
+        std::string forward_strt_loc, reverse_strt_loc, stop_loc;
         nh.getParam("forward_location", forward_loc);
         nh.getParam("reverse_location", reverse_loc);
         nh.getParam("submerge_location", submerge_loc);
@@ -58,15 +78,38 @@ public:
         nh.getParam("rotate_ccw_location", rotate_ccw_loc);
         nh.getParam("right_location", right_loc);
         nh.getParam("left_location", left_loc);
+        nh.getParam("forward_start_location", forward_strt_loc);
+        nh.getParam("reverse_start_location", reverse_strt_loc);
+        nh.getParam("stop_location", stop_loc);
+        nh.getParam("depth_ok_thresh", depth_ok_thresh);
+        nh.getParam("dead_reckon_gate_count", dead_reckon_gate_count);
+        nh.getParam("dice_detect_count", dice_detect_count);
+        nh.getParam("gate_detect_count", gate_detect_count);
+        nh.getParam("search_count", search_count);
 
         if(!parse_json(forwards, forward_loc))
         {
             throw InvalidJSONException(forward_loc);
         }
 
+        if(!parse_json(forwards_start, forward_strt_loc))
+        {
+            throw InvalidJSONException(forward_strt_loc);
+        }
+
         if(!parse_json(reverse, reverse_loc))
         {
             throw InvalidJSONException(reverse_loc);
+        }
+
+        if(!parse_json(reverse_start, reverse_strt_loc))
+        {
+            throw InvalidJSONException(reverse_strt_loc);
+        }
+
+        if(!parse_json(stop, stop_loc))
+        {
+            throw InvalidJSONException(stop_loc);
         }
 
         if(!parse_json(submerge, submerge_loc))
@@ -122,20 +165,34 @@ public:
         return true;
     }
 
-    void run_forward() {run_event(forwards);}
-    void run_reverse() {run_event(reverse);}
-    void run_submerge() {run_event(submerge);}
-    void run_rise() {run_event(rise);}
-    void run_rotate_cw() {run_event(rotate_cw);}
-    void run_rotate_ccw() {run_event(rotate_ccw);}
-    void run_left() {run_event(left);}
-    void run_right() {run_event(right);}
+    void run_forward() {run_event(forwards, depth_submerge);}
+    void run_forward_start() {run_event(forwards_start, depth_submerge);}
+    void run_reverse() {run_event(reverse, depth_submerge);}
+    void run_reverse_start() {run_event(reverse_start, depth_submerge);}
+    void run_submerge() {run_event(submerge, depth_submerge);}
+    void run_rise() {run_event(rise, depth_rise);}
+    void run_rotate_cw() {run_event(rotate_cw, depth_submerge);}
+    void run_rotate_ccw() {run_event(rotate_ccw, depth_submerge);}
+    void run_left() {run_event(left, depth_submerge);}
+    void run_right() {run_event(right, depth_submerge);}
+    void run_stop() {run_event(stop, depth_submerge);}
 
     void receive_cam_offset(const vision::offset_position::ConstPtr &msg);
     void receive_dice_offsets(const vision::dice_offsets::ConstPtr &msg);
+    void receive_depth_info(const navigation::depth_info::ConstPtr &msg);
+
+    states fsm_state;
+    bool depth_ok;
+    bool dice_en;
+    bool scanner_en;
+    bool dice_detected;
+    int dead_reckon_gate_count;
+    int dice_detect_count;
+    int gate_detect_count;
+    int search_count;
 private:
 
-    void run_event(std::vector<nav_event_t> event_list);
+    void run_event(std::vector<nav_event_t> event_list, double depth);
 
     ros::NodeHandle nh;
     ros::Publisher nav_req_pub; 
@@ -145,7 +202,9 @@ private:
     int start_delay;
     bool max_dice_hit;
     bool min_dice_hit;
-    bool dice_detected;
+    double depth_submerge;
+    double depth_rise;
+    double depth_ok_thresh;
 
     // Placeholders for deltas
     double depth_delta;
@@ -161,13 +220,16 @@ private:
 
     // Navigation Event Lists
     std::vector<nav_event_t> forwards;
+    std::vector<nav_event_t> forwards_start;
     std::vector<nav_event_t> reverse;
+    std::vector<nav_event_t> reverse_start;
     std::vector<nav_event_t> submerge;
     std::vector<nav_event_t> rise;
     std::vector<nav_event_t> rotate_cw;
     std::vector<nav_event_t> rotate_ccw;
     std::vector<nav_event_t> right;
     std::vector<nav_event_t> left;
+    std::vector<nav_event_t> stop;
 
     bool parse_json(std::vector<nav_event_t> &nav_events, std::string json_file_location)
     {
@@ -191,7 +253,6 @@ private:
             nav_event.nav_req.forwards_velocity = it->second.get<double>("forwards_velocity");
             nav_event.nav_req.sideways_velocity = it->second.get<double>("sideways_velocity");
             nav_event.nav_req.yaw_rate = it->second.get<double>("yaw_rate");
-            nav_event.nav_req.depth = it->second.get<double>("depth");
             nav_event.time = it->second.get<double>("time_ms");
 
             if(it->first.compare("single") == 0)
@@ -268,34 +329,52 @@ private:
 
 void autonomous_manager::receive_cam_offset(const vision::offset_position::ConstPtr &msg)
 {
-    yaw_rate_delta = msg->relative_offset_x * yaw_delta_max / 100.0;
+    if(scanner_en)
+    {
+        yaw_rate_delta = msg->relative_offset_x * yaw_delta_max / 100.0;
+    }
 }
 
 void autonomous_manager::receive_dice_offsets(const vision::dice_offsets::ConstPtr &msg)
 {
-    yaw_rate_delta = msg->max_dice_offset.x_offset * yaw_delta_max / 100.0;
-    depth_delta = -msg->max_dice_offset.y_offset * depth_delta_max / 100.0;
-    
-    /*dice_detected = true;
-    if(!max_dice_hit)
+    if(dice_en)
     {
-        yaw_rate_delta = msg->max_dice_offset.x * yaw_delta_max / 100.0;
-        depth_delta = -msg->max_dice_offset.y * depth_delta_max / 100.0;
+        dice_detected = true;
+        yaw_rate_delta = msg->max_dice_offset.x_offset * yaw_delta_max / 100.0;
+        depth_delta = msg->max_dice_offset.y_offset * depth_delta_max / 100.0;
     }
-    else if(!min_dice_hit)
-    {
-        yaw_rate_delta = msg->min_dice_offset.x * yaw_delta_max / 100.0;
-        depth_delta = -msg->min_dice_offset.y * depth_delta_max / 100.0;
-    }*/
 }
 
-void autonomous_manager::run_event(std::vector<nav_event_t> event_list)
+void autonomous_manager::receive_depth_info(const navigation::depth_info::ConstPtr &msg)
+{
+    double signed_error = msg->desired_depth - msg->current_depth;
+    double error = (signed_error < 0) ? -signed_error : signed_error;
+    if(error < 0.07)
+    {
+        depth_ok = true;
+    }
+    else
+    {
+        depth_ok = false;
+    }
+}
+
+void autonomous_manager::run_event(std::vector<nav_event_t> event_list, double depth)
 {
     for(int i = 0; i < event_list.size() && ros::ok(); i++)
     {
+        // Reset Deltas
+        if(!scanner_en && !dice_en)
+        {
+            depth_delta = 0;
+            forwards_delta = 0;
+            sideways_delta = 0;
+            yaw_rate_delta = 0;
+        }
+        
         // Get message and add deltas
         navigation::nav_request nav_req = event_list[i].nav_req;
-        nav_req.depth += depth_delta;
+        nav_req.depth = depth + depth_delta;
         nav_req.forwards_velocity += forwards_delta;
         nav_req.sideways_velocity += sideways_delta;
         nav_req.yaw_rate += yaw_rate_delta;
@@ -327,6 +406,8 @@ int main(int argc, char ** argv)
         nh.subscribe<vision::offset_position>("/vision/" + front_cam_name, 1, &autonomous_manager::receive_cam_offset, &am);
     ros::Subscriber sub_dice_offsets = 
         nh.subscribe<vision::dice_offsets>("/vision/dice_offsets", 1, &autonomous_manager::receive_dice_offsets, &am);
+    ros::Subscriber sub_depth = 
+        nh.subscribe<navigation::depth_info>("/nav/depth_control_info", 1, &autonomous_manager::receive_depth_info, &am);
     
     am.start();
 
@@ -340,12 +421,76 @@ int main(int argc, char ** argv)
     if(!nav_calib.call(srv))
     {
 	ROS_ERROR("Failed to calibrate the system.");
-	return 1;
+	//return 1;
     }
-
-    am.run_forward();
     
-    ros::spin();
+    int state_count = 0;
+    while(ros::ok())
+    {
+        switch(am.fsm_state)
+        {
+        case(dive):
+            am.run_submerge();
+            if(am.depth_ok)
+            {
+                am.fsm_state = dead_reckon_gate;
+                state_count = am.dead_reckon_gate_count;
+                am.run_forward_start();
+            }
+            break;
+        case(dead_reckon_gate):
+            am.run_forward();
+            if(--state_count <= 0)
+            {
+                am.fsm_state = gate_detect;
+                state_count = am.gate_detect_count;
+                am.scanner_en = true;
+            }
+            break;
+        case(gate_detect):
+            am.scanner_en = true;
+            am.run_forward();
+            if(--state_count <= 0)
+            {
+                am.fsm_state = dice_detect;
+                state_count = am.dice_detect_count;
+                am.scanner_en = false;
+                am.run_forward();
+                am.dice_en = true;
+            }
+            break;
+        case(dice_detect):
+            am.dice_en = true;
+            am.run_forward();
+            if(!am.dice_detected && --state_count <= 0)
+            {
+                am.fsm_state = search;
+                state_count = am.search_count;
+                am.dice_en = true;
+                am.scanner_en = false;
+            }
+            am.dice_detected = false;
+            break;
+        case(stop):
+            am.run_stop();
+            break;
+        case(search):
+            am.run_rotate_cw();
+            if(am.dice_detected || --state_count <= 0)
+            {
+                am.run_forward_start();
+                am.fsm_state = dice_detect;
+                state_count = am.dice_detect_count;
+                am.dice_en = true;
+                am.scanner_en = false;
+            }
+            break;
+        case(rise):
+            am.run_rise();
+            break;
+        }
 
+        ros::spinOnce();
+    }
     return 0;
 }
