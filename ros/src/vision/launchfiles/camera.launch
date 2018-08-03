@@ -5,15 +5,17 @@
         <arg name="save_location" default="$(env HOME)/rosbag/$(arg node_name)_"/> 
         <arg name="fps" default="10"/>
         <arg name="fd" default="/dev/video0"/>
+        <arg name="is_device" default="true"/>
 
         <group if="$(arg record)">
           <node name="rosbag_$(arg node_name)" pkg="rosbag" type="record" args="-e /video/$(arg node_name)$ -o $(arg save_location)"/>
         </group>
 
-        <node name="$(arg node_name)" pkg="vision" type="sender" required="true">
+        <node name="$(arg node_name)" pkg="vision" type="sender" respawn="true" respawn_delay="1">
           <param name="topic_name" value="$(arg node_name)"/>
           <param name="fps" value="$(arg fps)"/>
           <param name="fd" value="$(arg fd)"/>
+          <param name="is_device" value="$(arg is_device)"/>
         </node>
 
 </launch>
