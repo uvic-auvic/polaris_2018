@@ -475,7 +475,7 @@ int main(int argc, char ** argv)
     ros::Subscriber sub_front_cam_offsets = 
         nh.subscribe<vision::offset_position>("/video/scanned_" + front_cam_name, 1, &autonomous_manager::receive_cam_offset, &am);
     ros::Subscriber sub_dice_offsets = 
-        nh.subscribe<vision::dice_offsets>("/vision/dice_offsets", 1, &autonomous_manager::receive_dice_offsets, &am);
+        nh.subscribe<vision::dice_offsets>("/video/dice_" + front_cam_name, 1, &autonomous_manager::receive_dice_offsets, &am);
     ros::Subscriber sub_depth = 
         nh.subscribe<navigation::depth_info>("/nav/depth_control_info", 1, &autonomous_manager::receive_depth_info, &am);
     
@@ -500,9 +500,6 @@ int main(int argc, char ** argv)
     }
     
     int state_count = 0;
-    am.scanner_en = true;
-    am.dice_en = true;
-
     while(ros::ok())
     {
         switch(am.fsm_state)
@@ -530,13 +527,22 @@ int main(int argc, char ** argv)
                 am.scanner_en = false;
                 am.run_forward();
                 am.dice_en = true;
+		am.scanner_en = true;
             }
-	    am.gate_passed = false;
             break;
         case(dice_detect):
             am.dice_en = true;
             am.run_forward();
-            if(!am.dice_detected && --state_count <= 0)
+	    if(am.dice_detected)
+	    {
+		am.scanner_en = false;
+		state_count = am.dice_detect_count;
+	    }
+	    else
+	    {
+		am.scanner_en = true;
+	    }
+            if(!am.gate_detected && !am.dice_detected && --state_count <= 0)
             {
                 am.fsm_state = search;
                 state_count = am.search_count;

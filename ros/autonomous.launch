@@ -1,7 +1,7 @@
 <launch>
     <!-- Arguments that can be overriden from the command line-->
     <!-- Append argname:=argvalue to roslaunch command in order to override -->
-    <arg name="record" default="false"/>
+    <arg name="record" default="true"/>
     <arg name="save_location" default="$(env HOME)/rosbag/main_"/>
     <arg name="max_linear_vel" value="5.0"/>
     <arg name="max_angular_vel" value="180.0"/>
@@ -25,9 +25,12 @@
     <include file="$(find vision)/launchfiles/jetson_csi_cam.launch">
         <arg name="record" value="$(arg record)"/>                       
     </include>
-    <!--include file="$(find vision)/launchfiles/scanner.launch">
+    <include file="$(find vision)/launchfiles/scanner.launch">
         <arg name="cam_name" value="$(arg front_camera)"/>
-    </include-->
+    </include>
+    <include file="$(find vision)/launchfiles/dice.launch">
+        <arg name="cam_name" value="$(arg front_camera)"/>
+    </include>
     <!--include file="$(find vision)/launchfiles/classifier.launch"/-->
 
     <!-- Peripheral/Monitor Nodes -->
