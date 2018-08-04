@@ -2,15 +2,15 @@
     "single" : {
         "forwards_velocity" : -3.0,
         "sideways_velocity" : 0.0,
-        "yaw_rate" : -6.0,
-        "time_ms" : 800.0
+        "yaw_rate" : -4,
+        "time_ms" : 800
     },
 
     "single" : {
         "forwards_velocity" : -3.0,
         "sideways_velocity" : 0.0,
-        "yaw_rate" : 0,
-        "time_ms" : 800.0
+        "yaw_rate" : -5,
+        "time_ms" : 1500
     }
 }
 

@@ -15,6 +15,8 @@ class object_scanner:
         self.dims = (550, 400) # width, height
         
     def detect(self, img):
+        msg = offset_position()
+        msg.relative_offset_x = 0
         cv2_img = self.bridge.imgmsg_to_cv2(img, "bgr8")
         orig_img = cv2.resize(cv2_img, self.dims)
         cv_img = cv2.GaussianBlur(orig_img, (13,13), 0)
