@@ -5,6 +5,7 @@
         "ack_message" : "RID\n",
         "ack_response" : "Power_Board\r\n",
         "timeout": 1000,
+	"retry_count" : 1,
         "convert_to_bytes" : false
     }
 }

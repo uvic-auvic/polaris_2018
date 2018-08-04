@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(ai)
-set(CMAKE_CXX_FLAGS "-std=c++11")
+set(CMAKE_CXX_FLAGS "-std=c++11 -g")
 set(Boost_USE_MULTITHREADED OFF)
 
 find_package(catkin REQUIRED COMPONENTS

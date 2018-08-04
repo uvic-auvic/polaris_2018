@@ -1,41 +1,46 @@
 {
-    "motor_controller" : {
-	"ignore" : false,
-        "baud" : 9600,
-        "ack_message" : "RID\n",
-        "ack_response" : "Motor Controller\r\n",
-        "timeout": 1000,
-        "convert_to_bytes" : false
-    },
-    
-    "power_board" : {
-        "ignore" : false,
-        "baud" : 115200,
-        "ack_message" : "RID\n",
-        "ack_response" : "Power_Board\r\n",
-        "timeout": 1000,
-        "convert_to_bytes" : false
-    },
-
-    "hydrophones" : {
-	"ignore" : true,
-        "baud" : 115200,
-        "ack_message" : "RID\n",
-        "ack_response" : "Hydrophones v1.0\r\n",
-        "timeout": 1000,
-        "convert_to_bytes" : false
-    },
-    
     "imu" : {
 	"ignore" : false,
         "baud" : 38400,
         "ack_message" : "0xF1",
         "ack_response" : "0xF10B780C69",
-        "timeout": 1000,
+        "timeout": 100,
+	"retry_count" : 1,
         "convert_to_bytes" : true,
         "size_of_message" : 1,
         "size_of_response" : 5,
         "big_endian_message": true,
         "big_endian_response" : true
+    },
+
+    "power_board" : {
+        "ignore" : false,
+        "baud" : 115200,
+        "ack_message" : "RID\n",
+        "ack_response" : "Power_Board\r\n",
+        "timeout": 100,
+	"retry_count" : 5,
+        "convert_to_bytes" : false
+    },
+
+    "hydrophones" : {
+	"ignore" : false,
+        "baud" : 115200,
+        "ack_message" : "RID\n",
+        "ack_response" : "Hydrophones v1.0\r\n",
+        "timeout": 100,
+	"retry_count" : 4,
+        "convert_to_bytes" : false
+    },
+
+    "motor_controller" : {
+	"ignore" : false,
+        "baud" : 9600,
+        "ack_message" : "RID\n",
+        "ack_response" : "Motor Controller\r\n",
+        "timeout": 100,
+	"retry_count" : 20,
+        "convert_to_bytes" : false
     }
+    
 }

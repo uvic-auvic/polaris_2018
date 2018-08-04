@@ -28,7 +28,7 @@ class device_property {
 public:
     device_property(
         string name, bool ignore, string ack_m, string ack_r, int baud, int timeout, 
-        bool convert_to_bytes, size_t size_of_message, size_t size_of_response,
+        int retry_count, bool convert_to_bytes, size_t size_of_message, size_t size_of_response,
         bool big_endian_message, bool big_endian_response)
      : name(name)
      , ignore(ignore)
@@ -37,6 +37,7 @@ public:
      , baud(baud)
      , convert_to_bytes(convert_to_bytes)
      , timeout(serial::Timeout::simpleTimeout(timeout))
+     , retry_count(retry_count)
      , size_of_response(size_of_response)
      , size_of_message(size_of_message)
      , big_endian_message(big_endian_message)
@@ -46,6 +47,7 @@ public:
     std::string ack_message;
     std::string ack_response;
     int baud;
+    int retry_count;
     bool convert_to_bytes;
     size_t size_of_message;
     size_t size_of_response;
