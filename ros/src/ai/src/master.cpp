@@ -200,6 +200,7 @@ private:
     bool can_start;
     int poll_delay;
     int start_delay;
+    navigation::nav_request last_nav_req;
     bool max_dice_hit;
     bool min_dice_hit;
     double depth_submerge;
@@ -331,7 +332,15 @@ void autonomous_manager::receive_cam_offset(const vision::offset_position::Const
 {
     if(scanner_en)
     {
-        yaw_rate_delta = msg->relative_offset_x * yaw_delta_max / 100.0;
+	yaw_rate_delta = ((double)-msg->relative_offset_x) * yaw_delta_max / 100.0;
+
+	navigation::nav_request nav_req = last_nav_req;
+	nav_req.depth += depth_delta;
+	nav_req.forwards_velocity += forwards_delta;
+	nav_req.sideways_velocity += sideways_delta;
+	nav_req.yaw_rate += yaw_rate_delta;
+	
+	nav_req_pub.publish(nav_req);
     }
 }
 
@@ -340,8 +349,16 @@ void autonomous_manager::receive_dice_offsets(const vision::dice_offsets::ConstP
     if(dice_en)
     {
         dice_detected = true;
-        yaw_rate_delta = msg->max_dice_offset.x_offset * yaw_delta_max / 100.0;
-        depth_delta = msg->max_dice_offset.y_offset * depth_delta_max / 100.0;
+        yaw_rate_delta = ((double)-msg->max_dice_offset.x_offset) * yaw_delta_max / 100.0;
+        depth_delta = ((double)msg->max_dice_offset.y_offset) * depth_delta_max / 100.0;
+
+	navigation::nav_request nav_req = last_nav_req;
+	nav_req.depth += depth_delta;
+	nav_req.forwards_velocity += forwards_delta;
+	nav_req.sideways_velocity += sideways_delta;
+	nav_req.yaw_rate += yaw_rate_delta;
+	
+	nav_req_pub.publish(nav_req);
     }
 }
 
@@ -374,6 +391,7 @@ void autonomous_manager::run_event(std::vector<nav_event_t> event_list, double d
         
         // Get message and add deltas
         navigation::nav_request nav_req = event_list[i].nav_req;
+        last_nav_req = nav_req;
         nav_req.depth = depth + depth_delta;
         nav_req.forwards_velocity += forwards_delta;
         nav_req.sideways_velocity += sideways_delta;
@@ -388,6 +406,10 @@ void autonomous_manager::run_event(std::vector<nav_event_t> event_list, double d
             ros::spinOnce();
             d.sleep();
         }
+	else
+	{
+	    ros::spin();
+	}
     }
 }
 
@@ -403,7 +425,7 @@ int main(int argc, char ** argv)
     ros::Publisher nav_req_pub = nh.advertise<navigation::nav_request>("/nav/navigation", 1);
     ros::ServiceClient nav_calib = nh.serviceClient<peripherals::avg_data>("/nav/CalibrateSurfaceDepth");
     ros::Subscriber sub_front_cam_offsets = 
-        nh.subscribe<vision::offset_position>("/vision/" + front_cam_name, 1, &autonomous_manager::receive_cam_offset, &am);
+        nh.subscribe<vision::offset_position>("/video/scanned_" + front_cam_name, 1, &autonomous_manager::receive_cam_offset, &am);
     ros::Subscriber sub_dice_offsets = 
         nh.subscribe<vision::dice_offsets>("/vision/dice_offsets", 1, &autonomous_manager::receive_dice_offsets, &am);
     ros::Subscriber sub_depth = 

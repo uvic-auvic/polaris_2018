@@ -1,13 +1,13 @@
 <launch>
      <arg name="poll_delay" default="1"/>
      <arg name="start_delay" default="10"/>
-     <arg name="front_cam_name" default="top_face_cam"/>
+     <arg name="front_cam_name" default="topic_face_cam"/>
      <arg name="depth_submerge" default="1.0"/>
      <arg name="depth_rise" default="0.4"/>
      <arg name="depth_delta_max" default="2.0"/>
      <arg name="forwards_delta_max" default="5.0"/>
      <arg name="sideways_delta_max" default="5.0"/>
-     <arg name="yaw_delta_max" default="10.0"/>
+     <arg name="yaw_delta_max" default="-3.0"/>
 
      <arg name="dead_reckon_gate_count" default="7"/>
      <arg name="dead_reckon_gate_after" default="3"/>
