@@ -57,6 +57,7 @@ public:
             max_dice_hit(false),
             min_dice_hit(false),
             dice_detected(false),
+	    gate_detected(false),
 	    gate_passed(false),
             fsm_state(dive),
             depth_ok(false)
@@ -189,6 +190,7 @@ public:
     bool dice_en;
     bool scanner_en;
     bool dice_detected;
+    bool gate_detected;
     bool gate_passed;
     int dead_reckon_gate_count;
     int dice_detect_count;
@@ -341,6 +343,8 @@ void autonomous_manager::receive_cam_offset(const vision::offset_position::Const
 	{
 	    gate_passed = true;
 	}
+
+	gate_detected = true;
 	
 	navigation::control_en srv;
 	srv.request.vel_x_enable = true;
@@ -529,6 +533,7 @@ int main(int argc, char ** argv)
                 am.dice_en = true;
 		am.scanner_en = true;
             }
+	    am.gate_detected = false;
             break;
         case(dice_detect):
             am.dice_en = true;
@@ -550,6 +555,7 @@ int main(int argc, char ** argv)
                 am.scanner_en = false;
             }
             am.dice_detected = false;
+	    am.gate_detected = false;
             break;
         case(stop):
             am.run_stop();
