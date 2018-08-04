@@ -339,9 +339,10 @@ void autonomous_manager::receive_cam_offset(const vision::offset_position::Const
 {
     if(scanner_en)
     {
-	if(msg->relative_offset_x == 255)
+	if(msg->relative_offset_x == 127)
 	{
 	    gate_passed = true;
+	    return;
 	}
 
 	gate_detected = true;
