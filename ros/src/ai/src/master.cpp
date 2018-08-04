@@ -8,6 +8,7 @@
 #include "ai/start.h"
 #include "navigation/nav_request.h"
 #include "navigation/depth_info.h"
+#include "navigation/control_en.h"
 #include "peripherals/avg_data.h"
 #include "vision/offset_position.h"
 #include "vision/dice_offsets.h"
@@ -46,6 +47,7 @@ public:
         :   nh(ros::NodeHandle("~")),
             rss(nh.advertiseService("start_ai", &autonomous_manager::start_autonomous_mode, this)),
             nav_req_pub(nh.advertise<navigation::nav_request>("/nav/navigation", 1)),
+	    control_en(nh.serviceClient<navigation::control_en>("/control_system/ControlSysEnable")),
             depth_delta(0.0),
             forwards_delta(0.0),
             sideways_delta(0.0),
@@ -55,6 +57,8 @@ public:
             max_dice_hit(false),
             min_dice_hit(false),
             dice_detected(false),
+	    gate_detected(false),
+	    gate_passed(false),
             fsm_state(dive),
             depth_ok(false)
     {
@@ -186,6 +190,8 @@ public:
     bool dice_en;
     bool scanner_en;
     bool dice_detected;
+    bool gate_detected;
+    bool gate_passed;
     int dead_reckon_gate_count;
     int dice_detect_count;
     int gate_detect_count;
@@ -195,7 +201,8 @@ private:
     void run_event(std::vector<nav_event_t> event_list, double depth);
 
     ros::NodeHandle nh;
-    ros::Publisher nav_req_pub; 
+    ros::Publisher nav_req_pub;
+    ros::ServiceClient control_en;
     rosserv rss;
     bool can_start;
     int poll_delay;
@@ -332,7 +339,27 @@ void autonomous_manager::receive_cam_offset(const vision::offset_position::Const
 {
     if(scanner_en)
     {
-	yaw_rate_delta = ((double)-msg->relative_offset_x) * yaw_delta_max / 100.0;
+	if(msg->relative_offset_x == 255)
+	{
+	    gate_passed = true;
+	}
+
+	gate_detected = true;
+	
+	navigation::control_en srv;
+	srv.request.vel_x_enable = true;
+	srv.request.vel_y_enable = true;
+	srv.request.vel_z_enable = true;
+	srv.request.roll_enable = true;
+	srv.request.pitch_enable = true;
+	srv.request.yaw_enable = true;
+	if(yaw_rate_delta * msg->relative_offset_x <= 0)
+	{
+	    srv.request.yaw_enable = false;
+	}
+	control_en.call(srv);
+
+	yaw_rate_delta = ((double)msg->relative_offset_x) * yaw_delta_max / 100.0;
 
 	navigation::nav_request nav_req = last_nav_req;
 	nav_req.depth += depth_delta;
@@ -341,6 +368,9 @@ void autonomous_manager::receive_cam_offset(const vision::offset_position::Const
 	nav_req.yaw_rate += yaw_rate_delta;
 	
 	nav_req_pub.publish(nav_req);
+
+	srv.request.yaw_enable = true;
+	control_en.call(srv);
     }
 }
 
@@ -349,7 +379,24 @@ void autonomous_manager::receive_dice_offsets(const vision::dice_offsets::ConstP
     if(dice_en)
     {
         dice_detected = true;
-        yaw_rate_delta = ((double)-msg->max_dice_offset.x_offset) * yaw_delta_max / 100.0;
+	navigation::control_en srv;
+	srv.request.vel_x_enable = true;
+	srv.request.vel_y_enable = true;
+	srv.request.vel_z_enable = true;
+	srv.request.roll_enable = true;
+	srv.request.pitch_enable = true;
+	srv.request.yaw_enable = true;
+	if(yaw_rate_delta * msg->max_dice_offset.x_offset <= 0)
+	{
+	    srv.request.yaw_enable = false;
+	}
+	if(depth_delta * msg->max_dice_offset.y_offset <= 0)
+	{
+	    srv.request.vel_z_enable = false;
+	}
+	control_en.call(srv);
+
+        yaw_rate_delta = ((double)msg->max_dice_offset.x_offset) * yaw_delta_max / 100.0;
         depth_delta = ((double)msg->max_dice_offset.y_offset) * depth_delta_max / 100.0;
 
 	navigation::nav_request nav_req = last_nav_req;
@@ -359,6 +406,10 @@ void autonomous_manager::receive_dice_offsets(const vision::dice_offsets::ConstP
 	nav_req.yaw_rate += yaw_rate_delta;
 	
 	nav_req_pub.publish(nav_req);
+
+	srv.request.yaw_enable = true;
+	srv.request.vel_z_enable = true;
+	control_en.call(srv);
     }
 }
 
@@ -392,6 +443,7 @@ void autonomous_manager::run_event(std::vector<nav_event_t> event_list, double d
         // Get message and add deltas
         navigation::nav_request nav_req = event_list[i].nav_req;
         last_nav_req = nav_req;
+	last_nav_req.depth = depth;
         nav_req.depth = depth + depth_delta;
         nav_req.forwards_velocity += forwards_delta;
         nav_req.sideways_velocity += sideways_delta;
@@ -427,11 +479,16 @@ int main(int argc, char ** argv)
     ros::Subscriber sub_front_cam_offsets = 
         nh.subscribe<vision::offset_position>("/video/scanned_" + front_cam_name, 1, &autonomous_manager::receive_cam_offset, &am);
     ros::Subscriber sub_dice_offsets = 
-        nh.subscribe<vision::dice_offsets>("/vision/dice_offsets", 1, &autonomous_manager::receive_dice_offsets, &am);
+        nh.subscribe<vision::dice_offsets>("/video/dice_" + front_cam_name, 1, &autonomous_manager::receive_dice_offsets, &am);
     ros::Subscriber sub_depth = 
         nh.subscribe<navigation::depth_info>("/nav/depth_control_info", 1, &autonomous_manager::receive_depth_info, &am);
     
     am.start();
+
+    if(!ros::ok())
+    {
+	return 0;
+    }
 
     // Start doing AI things
     ROS_ERROR("Starting Autonomous Mode");
@@ -453,12 +510,7 @@ int main(int argc, char ** argv)
         {
         case(dive):
             am.run_submerge();
-            if(am.depth_ok)
-            {
-                am.fsm_state = dead_reckon_gate;
-                state_count = am.dead_reckon_gate_count;
-                am.run_forward_start();
-            }
+            am.fsm_state = stop;
             break;
         case(dead_reckon_gate):
             am.run_forward();
@@ -472,19 +524,30 @@ int main(int argc, char ** argv)
         case(gate_detect):
             am.scanner_en = true;
             am.run_forward();
-            if(--state_count <= 0)
+            if(am.gate_passed)
             {
                 am.fsm_state = dice_detect;
                 state_count = am.dice_detect_count;
                 am.scanner_en = false;
                 am.run_forward();
                 am.dice_en = true;
+		am.scanner_en = true;
             }
+	    am.gate_detected = false;
             break;
         case(dice_detect):
             am.dice_en = true;
             am.run_forward();
-            if(!am.dice_detected && --state_count <= 0)
+	    if(am.dice_detected)
+	    {
+		am.scanner_en = false;
+		state_count = am.dice_detect_count;
+	    }
+	    else
+	    {
+		am.scanner_en = true;
+	    }
+            if(!am.gate_detected && !am.dice_detected && --state_count <= 0)
             {
                 am.fsm_state = search;
                 state_count = am.search_count;
@@ -492,9 +555,16 @@ int main(int argc, char ** argv)
                 am.scanner_en = false;
             }
             am.dice_detected = false;
+	    am.gate_detected = false;
             break;
         case(stop):
             am.run_stop();
+            if(am.depth_ok)
+            {
+                am.fsm_state = dead_reckon_gate;
+                state_count = am.dead_reckon_gate_count;
+                am.run_forward_start();
+            }
             break;
         case(search):
             am.run_rotate_cw();

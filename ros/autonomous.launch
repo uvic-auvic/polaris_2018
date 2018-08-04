@@ -28,6 +28,9 @@
     <include file="$(find vision)/launchfiles/scanner.launch">
         <arg name="cam_name" value="$(arg front_camera)"/>
     </include>
+    <include file="$(find vision)/launchfiles/dice.launch">
+        <arg name="cam_name" value="$(arg front_camera)"/>
+    </include>
     <!--include file="$(find vision)/launchfiles/classifier.launch"/-->
 
     <!-- Peripheral/Monitor Nodes -->

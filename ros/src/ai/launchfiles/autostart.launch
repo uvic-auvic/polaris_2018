@@ -2,16 +2,16 @@
      <arg name="poll_delay" default="1"/>
      <arg name="start_delay" default="10"/>
      <arg name="front_cam_name" default="topic_face_cam"/>
-     <arg name="depth_submerge" default="1.0"/>
+     <arg name="depth_submerge" default="0.7"/>
      <arg name="depth_rise" default="0.4"/>
      <arg name="depth_delta_max" default="2.0"/>
      <arg name="forwards_delta_max" default="5.0"/>
      <arg name="sideways_delta_max" default="5.0"/>
-     <arg name="yaw_delta_max" default="-3.0"/>
+     <arg name="yaw_delta_max" default="30.0"/>
 
-     <arg name="dead_reckon_gate_count" default="7"/>
+     <arg name="dead_reckon_gate_count" default="4"/>
      <arg name="dead_reckon_gate_after" default="3"/>
-     <arg name="gate_detect_count" default="5"/>
+     <arg name="gate_detect_count" default="10"/>
      <arg name="dead_reckon_dice_count" default="5"/>
      <arg name="dead_reckon_dice_after" default="5"/>
      <arg name="dice_detect_count" default="5"/>
@@ -29,8 +29,14 @@
      <arg name="right_location" default="$(find ai)json_cmds/right.json"/>
      <arg name="left_location" default="$(find ai)json_cmds/left.json"/>
      <arg name="stop_location" default="$(find ai)json_cmds/stop.json"/>
+     <arg name="debug" default="false"/>
+     <arg name="gdb_prefix" value=""/>
+     <group if="$(arg debug)">
+            <arg name="gdb_prefix" value="xterm -e gdbtui --args"/>
+     </group>
+     
+    <node name="ai_master" pkg="ai" type="master" required="true" launch-prefix="$(arg gdb_prefix)">
 
-    <node name="ai_master" pkg="ai" type="master" required="true">
         <param name="dead_reckon_gate_count" value="$(arg dead_reckon_gate_count)"/>
         <param name="dead_reckon_gate_after" value="$(arg dead_reckon_gate_after)"/>
         <param name="gate_detect_count" value="$(arg gate_detect_count)"/>
