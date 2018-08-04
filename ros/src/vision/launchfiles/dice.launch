@@ -1,5 +1,5 @@
 <launch>
-        <arg name="cam_name" default="topic_face_cam"/>
+        <arg name="cam_name" default="front_camera"/>
         
         <node name="dice_$(arg cam_name)" pkg="vision" type="dice.py" required="true">
               <param name="topic_in_name" value="/video/$(arg cam_name)"/>
