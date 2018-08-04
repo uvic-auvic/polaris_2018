@@ -431,12 +431,7 @@ int main(int argc, char ** argv)
         {
         case(dive):
             am.run_submerge();
-            if(am.depth_ok)
-            {
-                am.fsm_state = dead_reckon_gate;
-                state_count = am.dead_reckon_gate_count;
-                am.run_forward_start();
-            }
+            am.fsm_state = stop;
             break;
         case(dead_reckon_gate):
             am.run_forward();
@@ -473,6 +468,12 @@ int main(int argc, char ** argv)
             break;
         case(stop):
             am.run_stop();
+            if(am.depth_ok)
+            {
+                am.fsm_state = dead_reckon_gate;
+                state_count = am.dead_reckon_gate_count;
+                am.run_forward_start();
+            }
             break;
         case(search):
             am.run_rotate_cw();
