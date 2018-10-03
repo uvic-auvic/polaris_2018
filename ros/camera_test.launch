@@ -4,12 +4,12 @@
     <arg name="record" value="false"/> 
 
     <include file="$(find webgui)/webgui.launch"/>
-    <include file="$(find vision)/launchfiles/scanner.launch">
+    <!--include file="$(find vision)/launchfiles/scanner.launch">
         <arg name="cam_name" value="$(arg front_camera)"/>
-    </include>
-    <include file="$(find vision)/launchfiles/dice.launch">
+    </include-->
+    <!--include file="$(find vision)/launchfiles/dice.launch">
         <arg name="cam_name" value="$(arg front_camera)"/>
-    </include>
+    </include-->
 
     <include file="$(find vision)/launchfiles/camera.launch">
         <arg name="node_name" value="$(arg front_camera)"/>
@@ -21,7 +21,7 @@
     <!--include file="$(find vision)/launchfiles/camera.launch">
         <arg name="node_name" value="$(arg front_camera)"/>
         <arg name="fps" value="1"/>
-        <arg name="fd" value="/dev/video1"/>
+        <arg name="fd" value="/dev/video0"/>
         <arg name="record" value="$(arg record)"/>
     </include-->
 
